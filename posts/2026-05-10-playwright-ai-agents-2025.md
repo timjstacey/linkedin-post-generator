@@ -1,3 +1,7 @@
+---
+linkedin_urn: urn:li:ugcPost:7459103265469943811
+---
+
 Playwright v1.56 shipped three AI agents directly inside the test runner, and I think most teams haven't fully processed what that means yet.
 
 The Planner explores your app and writes a Markdown test plan. The Generator turns that plan into executable code. The Healer finds broken tests and fixes them.
