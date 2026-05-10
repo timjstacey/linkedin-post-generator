@@ -1,0 +1,30 @@
+name: Research & Generate Post
+
+on:
+  schedule:
+    - cron: '0 9 * * 1'  # Every Monday 09:00 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  research-and-post:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - run: npm run research
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          TAVILY_API_KEY: ${{ secrets.TAVILY_API_KEY }}
+          TAVILY_MAX_SEARCHES: ${{ secrets.TAVILY_MAX_SEARCHES }}
+          RESEARCH_TOPIC: ${{ secrets.RESEARCH_TOPIC }}
+          HASHTAGS: ${{ secrets.HASHTAGS }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPO: ${{ github.repository }}
