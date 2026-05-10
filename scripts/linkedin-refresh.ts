@@ -48,7 +48,6 @@ envContent = setEnvVar(envContent, 'LINKEDIN_ACCESS_TOKEN', tokens.access_token)
 if (tokens.refresh_token) {
   envContent = setEnvVar(envContent, 'LINKEDIN_REFRESH_TOKEN', tokens.refresh_token);
 }
-
 writeFileSync(envPath, envContent);
 
 console.log(`Access token refreshed (expires in ${Math.round(tokens.expires_in / 3600)}h)`);
