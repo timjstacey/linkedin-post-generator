@@ -58,26 +58,6 @@ async function main() {
   );
 
   console.log(`Published successfully. LinkedIn post URN: ${postUrn}`);
-
-  // Write URN back into the post file as frontmatter so engage-workflow can find it
-  const updatedContent = `---\nlinkedin_urn: ${postUrn}\n---\n\n${postContent}`;
-  const { data: existing } = await octokit.repos.getContent({
-    owner,
-    repo,
-    path: postFile.filename,
-  });
-
-  if ('sha' in existing) {
-    await octokit.repos.createOrUpdateFileContents({
-      owner,
-      repo,
-      path: postFile.filename,
-      message: `chore: add LinkedIn URN to ${postFile.filename}`,
-      content: Buffer.from(updatedContent).toString('base64'),
-      sha: existing.sha,
-    });
-    console.log('URN written back to post file.');
-  }
 }
 
 main().catch((err) => {

@@ -30,18 +30,6 @@ export function loadResearchConfig(): Config {
   };
 }
 
-export function loadEngageConfig(): Config {
-  return {
-    anthropicApiKey: requireEnv('ANTHROPIC_API_KEY'),
-    tavilyMaxSearches: 0,
-    linkedinAccessToken: requireEnv('LINKEDIN_ACCESS_TOKEN'),
-    linkedinPersonUrn: requireEnv('LINKEDIN_PERSON_URN'),
-    hashtags: [],
-    githubToken: requireEnv('GITHUB_TOKEN'),
-    githubRepo: requireEnv('GITHUB_REPO'),
-  };
-}
-
 export function loadPublishConfig(): Config {
   return {
     anthropicApiKey: process.env['ANTHROPIC_API_KEY'] ?? '',
