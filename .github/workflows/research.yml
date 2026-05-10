@@ -11,6 +11,7 @@ permissions:
 
 jobs:
   research-and-post:
+    if: github.actor == 'timjstacey' || github.event_name == 'schedule'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -26,5 +27,12 @@ jobs:
           TAVILY_MAX_SEARCHES: ${{ secrets.TAVILY_MAX_SEARCHES }}
           RESEARCH_TOPIC: ${{ secrets.RESEARCH_TOPIC }}
           HASHTAGS: ${{ secrets.HASHTAGS }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPO: ${{ github.repository }}
+      - run: npm run engage
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          LINKEDIN_ACCESS_TOKEN: ${{ secrets.LINKEDIN_ACCESS_TOKEN }}
+          LINKEDIN_PERSON_URN: ${{ secrets.LINKEDIN_PERSON_URN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_REPO: ${{ github.repository }}
