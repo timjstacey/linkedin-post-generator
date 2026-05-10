@@ -9,6 +9,8 @@
   "scripts": {
     "research": "tsx src/research-workflow.ts",
     "publish": "tsx src/publish-workflow.ts",
+    "auth:linkedin": "tsx scripts/linkedin-auth.ts",
+    "refresh:linkedin": "tsx scripts/linkedin-refresh.ts",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
