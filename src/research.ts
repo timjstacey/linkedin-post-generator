@@ -57,6 +57,7 @@ export async function research(
   const sources: string[] = [];
   let summary = '';
   let continueLoop = true;
+  let searchCount = 0;
 
   while (continueLoop) {
     const response = await client.messages.create({
@@ -87,22 +88,33 @@ export async function research(
       for (const block of response.content) {
         if (block.type === 'tool_use' && block.name === 'search') {
           const input = block.input as { query: string };
-          const result = await tavilyClient.search(input.query, {
-            maxResults: 5,
-            includeAnswer: true,
-          });
 
-          for (const r of result.results) {
-            if (r.url && !sources.includes(r.url)) {
-              sources.push(r.url);
+          if (searchCount >= config.tavilyMaxSearches) {
+            toolResults.push({
+              type: 'tool_result',
+              tool_use_id: block.id,
+              content: `Search limit of ${config.tavilyMaxSearches} reached. Write your summary now using the information already gathered.`,
+            });
+          } else {
+            searchCount++;
+            console.log(`Search ${searchCount}/${config.tavilyMaxSearches}: ${input.query}`);
+            const result = await tavilyClient.search(input.query, {
+              maxResults: 5,
+              includeAnswer: true,
+            });
+
+            for (const r of result.results) {
+              if (r.url && !sources.includes(r.url)) {
+                sources.push(r.url);
+              }
             }
-          }
 
-          toolResults.push({
-            type: 'tool_result',
-            tool_use_id: block.id,
-            content: JSON.stringify(result),
-          });
+            toolResults.push({
+              type: 'tool_result',
+              tool_use_id: block.id,
+              content: JSON.stringify(result),
+            });
+          }
         }
       }
 

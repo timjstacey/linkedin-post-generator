@@ -3,6 +3,7 @@ import 'dotenv/config';
 export interface Config {
   anthropicApiKey: string;
   tavilyApiKey?: string;
+  tavilyMaxSearches: number;
   linkedinAccessToken?: string;
   linkedinPersonUrn?: string;
   researchTopic?: string;
@@ -21,6 +22,7 @@ export function loadResearchConfig(): Config {
   return {
     anthropicApiKey: requireEnv('ANTHROPIC_API_KEY'),
     tavilyApiKey: requireEnv('TAVILY_API_KEY'),
+    tavilyMaxSearches: parseInt(process.env['TAVILY_MAX_SEARCHES'] ?? '5', 10),
     researchTopic: requireEnv('RESEARCH_TOPIC'),
     hashtags: (process.env['HASHTAGS'] ?? '').split(',').filter(Boolean),
     githubToken: requireEnv('GITHUB_TOKEN'),
@@ -31,6 +33,7 @@ export function loadResearchConfig(): Config {
 export function loadPublishConfig(): Config {
   return {
     anthropicApiKey: process.env['ANTHROPIC_API_KEY'] ?? '',
+    tavilyMaxSearches: 0,
     linkedinAccessToken: requireEnv('LINKEDIN_ACCESS_TOKEN'),
     linkedinPersonUrn: requireEnv('LINKEDIN_PERSON_URN'),
     hashtags: [],
