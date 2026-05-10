@@ -5,7 +5,7 @@ import { fileURLToPath } from 'node:url';
 import type { ResearchResult } from './research.js';
 import type { Config } from './config.js';
 
-const skillsDir = join(dirname(fileURLToPath(import.meta.url)), '..', '.claude', 'skills');
+const skillsDir = join(dirname(fileURLToPath(import.meta.url)), '..', '.claude', 'skills', 'stop-slop');
 
 async function loadStopSlopRules(): Promise<string> {
   const [core, phrases, structures] = await Promise.all([
