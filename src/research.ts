@@ -12,7 +12,7 @@ export async function research(
   topic: string,
   existingResearch: string[],
   existingPosts: string[],
-  config: Config,
+  config: Config
 ): Promise<ResearchResult> {
   const client = new Anthropic({ apiKey: config.anthropicApiKey });
   const tavilyClient = tavily({ apiKey: config.tavilyApiKey! });

@@ -1,8 +1,4 @@
-export async function createPost(
-  text: string,
-  accessToken: string,
-  personUrn: string,
-): Promise<string> {
+export async function createPost(text: string, accessToken: string, personUrn: string): Promise<string> {
   const body = {
     author: personUrn,
     lifecycleState: 'PUBLISHED',

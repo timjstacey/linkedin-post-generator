@@ -2,11 +2,11 @@
 
 ## Background
 
-The intent of the linkedin post generator is to research a given topic over a specific timeframe and create an engaging linkedin post based off the research.  To achieve this the application will use Claude AI for researching and creating the post, then use the linkedin developer API to post the content to the provided user profile.
+The intent of the linkedin post generator is to research a given topic over a specific timeframe and create an engaging linkedin post based off the research. To achieve this the application will use Claude AI for researching and creating the post, then use the linkedin developer API to post the content to the provided user profile.
 
 ## Expected Workflow
 
-The application will run on a schedule via Github actions.  When the schedule is triggered, the application should carry out research for the provided topic.  Once research has fished, a new feature branch will be created based off the `main` called `feature/$DATE-post-title`.  Relevant research should be outputted to a central location in the form of a `.md` file to allow future runs to 
+The application will run on a schedule via Github actions. When the schedule is triggered, the application should carry out research for the provided topic. Once research has fished, a new feature branch will be created based off the `main` called `feature/$DATE-post-title`. Relevant research should be outputted to a central location in the form of a `.md` file to allow future runs to
 
 - pipeline is trigger via scheduled Github actions
 - upon triggering, an AI workflow will carry out research for the provided topic
@@ -20,7 +20,7 @@ The application will run on a schedule via Github actions.  When the schedule is
 
 ## Requirements
 
-Requirements marked as `MUST` are non-negotiable.  Requirements marked as `SHOULD` are negotiable and can be skipped if libraries/API's do not support the requirement.
+Requirements marked as `MUST` are non-negotiable. Requirements marked as `SHOULD` are negotiable and can be skipped if libraries/API's do not support the requirement.
 
 - MUST: store secrets in a `.env` file, i.e. API keys, password, personal information
 - MUST: run in Github actions on a schedule
@@ -47,6 +47,6 @@ The following skills are required for this project:
 
 ## Tooling
 
-- latest nodejs 
+- latest nodejs
 - docker for pipeline execution?
 - `anthropic-ai/sdk` or `claude-code-js` (which ever sdk is better suited)

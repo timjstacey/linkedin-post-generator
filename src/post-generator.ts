@@ -25,7 +25,7 @@ export interface PostResult {
 export async function generatePost(
   researchResult: ResearchResult,
   existingPosts: string[],
-  config: Config,
+  config: Config
 ): Promise<PostResult> {
   const client = new Anthropic({ apiKey: config.anthropicApiKey });
 

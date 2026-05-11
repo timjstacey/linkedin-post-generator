@@ -12,12 +12,7 @@ function parseRepo(repo: string): { owner: string; repo: string } {
   return { owner: parts[0], repo: parts[1] };
 }
 
-async function listMarkdownFiles(
-  octokit: Octokit,
-  owner: string,
-  repo: string,
-  path: string,
-): Promise<string[]> {
+async function listMarkdownFiles(octokit: Octokit, owner: string, repo: string, path: string): Promise<string[]> {
   try {
     const { data } = await octokit.repos.getContent({ owner, repo, path });
     if (!Array.isArray(data)) return [];
@@ -35,7 +30,7 @@ async function listMarkdownFiles(
             return Buffer.from(fileData.content, 'base64').toString('utf8');
           }
           return null;
-        }),
+        })
     );
 
     return contents.filter((c): c is string => c !== null) as string[];
@@ -95,7 +90,7 @@ async function main() {
       { path: `research/${date}-${post.slug}.md`, content: researchFileContent },
       { path: `posts/${date}-${post.slug}.md`, content: post.content },
     ],
-    `feat: add research and post for "${post.title}"`,
+    `feat: add research and post for "${post.title}"`
   );
 
   const prBody = [
@@ -129,7 +124,7 @@ async function main() {
     config.githubRepo,
     branchName,
     `[Post] ${post.title}`,
-    prBody,
+    prBody
   );
 
   console.log(`Pull request created: ${prUrl}`);
