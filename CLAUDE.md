@@ -62,9 +62,9 @@ linkedin-post-generator/
 │   ├── linkedin-auth.ts             # OAuth flow to obtain access token
 │   └── linkedin-refresh.ts          # refresh expired access token
 ├── posts/                           # generated posts (tracked in git)
-│   └── .gitkeep
+│   └── INDEX.md                     # one-row-per-post index; read instead of all post files
 ├── research/                        # research notes (tracked in git)
-│   └── .gitkeep
+│   └── INDEX.md                     # one-row-per-research index; read instead of all research files
 └── tsconfig.json
 ```
 
