@@ -179,9 +179,21 @@ npm run auth:linkedin    # opens browser OAuth flow, writes token to .env
 POST_FILE_PATH=posts/some-post.md npm run publish
 ```
 
-### Research workflow (local)
+### Run research locally
 
-The research workflow requires GitHub Actions (claude-code-action runs in the Actions runner). To test locally, trigger `workflow_dispatch` on the `research.yml` workflow via the GitHub UI or `gh workflow run research.yml`.
+`scripts/research-local.sh` runs the same Claude Code prompt locally, reading from `.env` instead of Actions secrets. Prerequisites: Claude Code CLI installed (`claude` on PATH), `gh auth login` done, and `.env` populated.
+
+```bash
+# One-time: add research vars to .env
+ANTHROPIC_API_KEY=sk-ant-...
+TAVILY_API_KEY=tvly-...
+RESEARCH_TOPIC="AI in software engineering,TypeScript best practices"
+HASHTAGS=AI,SoftwareEngineering
+
+npm run research
+```
+
+The script writes a Tavily MCP config to `/tmp/mcp-config-local.json`, then runs `claude --print` with the same flags and prompt as the Actions workflow. Claude creates a branch, commits, and opens a PR exactly as it would in CI.
 
 ---
 

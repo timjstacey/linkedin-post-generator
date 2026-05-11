@@ -7,6 +7,7 @@
   "type": "module",
   "main": "src/publish-workflow.ts",
   "scripts": {
+    "research": "bash scripts/research-local.sh",
     "publish": "tsx src/publish-workflow.ts",
     "auth:linkedin": "tsx scripts/linkedin-auth.ts",
     "refresh:linkedin": "tsx scripts/linkedin-refresh.ts",
