@@ -17,17 +17,40 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
         with:
-          node-version-file: .nvmrc
-          cache: npm
-      - run: npm ci
-      - run: npm run research
+          fetch-depth: 0
+
+      - name: Configure git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Write Tavily MCP config
         env:
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           TAVILY_API_KEY: ${{ secrets.TAVILY_API_KEY }}
-          TAVILY_MAX_SEARCHES: ${{ secrets.TAVILY_MAX_SEARCHES }}
-          RESEARCH_TOPIC: ${{ secrets.RESEARCH_TOPIC }}
-          HASHTAGS: ${{ secrets.HASHTAGS }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GITHUB_REPO: ${{ github.repository }}
+        run: |
+          cat > /tmp/mcp-config.json << EOF
+          {
+            "mcpServers": {
+              "tavily": {
+                "command": "npx",
+                "args": ["-y", "tavily-mcp"],
+                "env": {
+                  "TAVILY_API_KEY": "${TAVILY_API_KEY}"
+                }
+              }
+            }
+          }
+          EOF
+
+      - uses: anthropics/claude-code-action@v1
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          claude_args: >-
+            --max-turns 40
+            --model claude-sonnet-4-6
+            --mcp-config /tmp/mcp-config.json
+            --allowedTools "Bash,Read,Write,Edit,mcp__tavily__*"
+          prompt: |
+            Read and execute the instructions in `.claude/skills/research/research.md` exactly.
+            RESEARCH_TOPIC, HASHTAGS, and GITHUB_REPO are available as environment variables.
