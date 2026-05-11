@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Load .env if present
+# Load .env if present, stripping inline comments before sourcing
 if [ -f .env ]; then
   set -o allexport
-  source .env
+  source <(sed 's/[[:space:]]*#.*//' .env | grep -v '^\s*$')
   set +o allexport
 fi
 
