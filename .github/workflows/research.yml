@@ -44,6 +44,9 @@ jobs:
           EOF
 
       - uses: anthropics/claude-code-action@v1
+        env:
+          RESEARCH_TOPIC: ${{ secrets.RESEARCH_TOPIC }}
+          HASHTAGS: ${{ secrets.HASHTAGS }}
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
           claude_args: >-
