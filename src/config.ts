@@ -28,7 +28,12 @@ export function loadResearchConfig(): Config {
     anthropicApiKey: requireEnv('ANTHROPIC_API_KEY'),
     tavilyApiKey: requireEnv('TAVILY_API_KEY'),
     tavilyMaxSearches: parseInt(process.env['TAVILY_MAX_SEARCHES'] ?? '5', 10),
-    researchTopic: pickRandom(requireEnv('RESEARCH_TOPIC').split(',').map((t) => t.trim()).filter(Boolean)),
+    researchTopic: pickRandom(
+      requireEnv('RESEARCH_TOPIC')
+        .split(',')
+        .map((t) => t.trim())
+        .filter(Boolean)
+    ),
     hashtags: (process.env['HASHTAGS'] ?? '').split(',').filter(Boolean),
     githubToken: requireEnv('GITHUB_TOKEN'),
     githubRepo: requireEnv('GITHUB_REPO'),

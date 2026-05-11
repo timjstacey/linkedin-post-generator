@@ -25,9 +25,7 @@ async function main() {
 
   const postFile = commit.files?.find(
     (f: { filename: string; status: string }) =>
-      f.filename.startsWith('posts/') &&
-      f.filename.endsWith('.md') &&
-      f.status === 'added',
+      f.filename.startsWith('posts/') && f.filename.endsWith('.md') && f.status === 'added'
   );
 
   if (!postFile) {
@@ -51,11 +49,7 @@ async function main() {
   const postContent = Buffer.from(fileData.content, 'base64').toString('utf8');
 
   console.log('Publishing to LinkedIn...');
-  const postUrn = await createPost(
-    postContent,
-    config.linkedinAccessToken!,
-    config.linkedinPersonUrn!,
-  );
+  const postUrn = await createPost(postContent, config.linkedinAccessToken!, config.linkedinPersonUrn!);
 
   console.log(`Published successfully. LinkedIn post URN: ${postUrn}`);
 }

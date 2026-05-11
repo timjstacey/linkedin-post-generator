@@ -8,11 +8,7 @@ function parseRepo(repo: string): { owner: string; repo: string } {
   return { owner: parts[0], repo: parts[1] };
 }
 
-export async function createBranch(
-  token: string,
-  repo: string,
-  branchName: string,
-): Promise<void> {
+export async function createBranch(token: string, repo: string, branchName: string): Promise<void> {
   const octokit = new Octokit({ auth: token });
   const { owner, repo: repoName } = parseRepo(repo);
 
@@ -35,7 +31,7 @@ export async function commitFiles(
   repo: string,
   branch: string,
   files: { path: string; content: string }[],
-  message: string,
+  message: string
 ): Promise<void> {
   const octokit = new Octokit({ auth: token });
   const { owner, repo: repoName } = parseRepo(repo);
@@ -56,8 +52,8 @@ export async function commitFiles(
         repo: repoName,
         content: Buffer.from(f.content).toString('base64'),
         encoding: 'base64',
-      }),
-    ),
+      })
+    )
   );
 
   const { data: tree } = await octokit.git.createTree({
@@ -93,7 +89,7 @@ export async function createPullRequest(
   repo: string,
   branch: string,
   title: string,
-  body: string,
+  body: string
 ): Promise<string> {
   const octokit = new Octokit({ auth: token });
   const { owner, repo: repoName } = parseRepo(repo);

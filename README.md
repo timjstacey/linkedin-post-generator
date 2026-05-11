@@ -65,7 +65,7 @@ Fill in `.env`:
 | `RESEARCH_TOPIC`         | Topic to research, e.g. `"AI in software engineering"`        |
 | `HASHTAGS`               | Comma-separated hashtags, e.g. `AI,SoftwareEngineering`       |
 | `GITHUB_TOKEN`           | Personal access token with `contents` + `pull-requests` write |
-| `GITHUB_REPO`            | Your repo in `owner/repo` format, e.g. `timjstacey/my-repo`  |
+| `GITHUB_REPO`            | Your repo in `owner/repo` format, e.g. `timjstacey/my-repo`   |
 
 Leave `LINKEDIN_ACCESS_TOKEN` and `LINKEDIN_PERSON_URN` blank — the next step fills them in.
 
@@ -83,14 +83,14 @@ This opens a browser, asks you to authorise the app, then writes `LINKEDIN_ACCES
 
 In your repo: **Settings → Secrets and variables → Actions → New repository secret**
 
-| Secret                  | Where to get it                                    |
-| ----------------------- | -------------------------------------------------- |
-| `ANTHROPIC_API_KEY`     | Anthropic console                                  |
-| `TAVILY_API_KEY`        | Tavily dashboard                                   |
-| `RESEARCH_TOPIC`        | Your chosen topic string                           |
-| `HASHTAGS`              | Comma-separated, optional                          |
-| `LINKEDIN_ACCESS_TOKEN` | Copy from `.env` after running `auth:linkedin`     |
-| `LINKEDIN_PERSON_URN`   | Copy from `.env` after running `auth:linkedin`     |
+| Secret                  | Where to get it                                |
+| ----------------------- | ---------------------------------------------- |
+| `ANTHROPIC_API_KEY`     | Anthropic console                              |
+| `TAVILY_API_KEY`        | Tavily dashboard                               |
+| `RESEARCH_TOPIC`        | Your chosen topic string                       |
+| `HASHTAGS`              | Comma-separated, optional                      |
+| `LINKEDIN_ACCESS_TOKEN` | Copy from `.env` after running `auth:linkedin` |
+| `LINKEDIN_PERSON_URN`   | Copy from `.env` after running `auth:linkedin` |
 
 `GITHUB_TOKEN` is provided automatically by Actions — do not add it manually.
 

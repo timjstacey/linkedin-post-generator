@@ -31,14 +31,20 @@ const openCmd = process.platform === 'darwin' ? 'open' : 'xdg-open';
 exec(`${openCmd} "${authUrl.toString()}"`);
 
 const code = await new Promise<string>((resolve, reject) => {
-  const timeout = setTimeout(() => {
-    server.close();
-    reject(new Error('Auth timeout (5 minutes)'));
-  }, 5 * 60 * 1000);
+  const timeout = setTimeout(
+    () => {
+      server.close();
+      reject(new Error('Auth timeout (5 minutes)'));
+    },
+    5 * 60 * 1000
+  );
 
   const server = createServer((req, res) => {
     const url = new URL(req.url!, `http://localhost:${PORT}`);
-    if (url.pathname !== '/callback') { res.end(); return; }
+    if (url.pathname !== '/callback') {
+      res.end();
+      return;
+    }
 
     const returnedState = url.searchParams.get('state');
     const authCode = url.searchParams.get('code');
@@ -114,9 +120,7 @@ async function fetchPersonSub(accessToken: string): Promise<string> {
   return data.sub;
 }
 
-const sub =
-  (tokens.id_token && parseJwtSub(tokens.id_token)) ??
-  (await fetchPersonSub(tokens.access_token));
+const sub = (tokens.id_token && parseJwtSub(tokens.id_token)) ?? (await fetchPersonSub(tokens.access_token));
 
 const personUrn = `urn:li:person:${sub}`;
 
