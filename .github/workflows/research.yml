@@ -25,9 +25,6 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
-      - name: Set today's date
-        run: echo "TODAY=$(date -u +%Y-%m-%d)" >> "$GITHUB_ENV"
-
       - name: Write Tavily MCP config
         env:
           TAVILY_API_KEY: ${{ secrets.TAVILY_API_KEY }}
@@ -55,84 +52,5 @@ jobs:
             --mcp-config /tmp/mcp-config.json
             --allowedTools "Bash,Read,Write,Edit,mcp__tavily__*"
           prompt: |
-            Today is ${{ env.TODAY }}. Research a topic and generate a LinkedIn post.
-
-            **Topic:** ${{ secrets.RESEARCH_TOPIC }}
-            **Hashtags to include:** ${{ secrets.HASHTAGS }}
-
-            ## Steps
-
-            1. Read `posts/INDEX.md` and `research/INDEX.md` to understand what angles and topics are already covered. Do not duplicate any angle listed there.
-
-            2. Read the writing rules in `.claude/skills/stop-slop/stop-slop.md`, `.claude/skills/stop-slop/references/phrases.md`, and `.claude/skills/stop-slop/references/structures.md`. Apply these rules when writing the post.
-
-            3. Use the Tavily search tool to find 5-8 recent articles (last 4 weeks) on the topic. Run multiple searches with different queries to find a fresh, specific angle not already in the index.
-
-            4. Derive a short slug from the post title: lowercase, hyphens only, no special characters. Call this SLUG.
-
-            5. Write a research summary to `research/${{ env.TODAY }}-SLUG.md`:
-               ```markdown
-               # Research: POST_TITLE
-
-               **Date range:** FOUR_WEEKS_AGO to ${{ env.TODAY }}
-
-               ## Summary
-
-               KEY_INSIGHTS_HERE
-
-               ## Sources
-
-               - URL_1
-               - URL_2
-               ```
-
-            6. Write the LinkedIn post to `posts/${{ env.TODAY }}-SLUG.md`:
-               - First-person, professional but conversational voice
-               - 150-300 words
-               - End with 3-5 hashtags (include the provided hashtags, add 1-2 topic-relevant ones)
-               - Apply all stop-slop rules strictly: no adverbs, no passive voice, no binary contrasts, no em-dashes, no throat-clearing openers, active voice throughout
-
-            7. Append one row to `posts/INDEX.md` (keep existing rows, add at the end):
-               ```
-               | ${{ env.TODAY }} | POST_TITLE | ONE_SENTENCE_ANGLE | #Hashtag1 #Hashtag2 |
-               ```
-
-            8. Append one row to `research/INDEX.md` (keep existing rows, add at the end):
-               ```
-               | ${{ env.TODAY }} | POST_TITLE | ONE_SENTENCE_KEY_ANGLE | NUMBER sources |
-               ```
-
-            9. Create a branch, commit, and open a PR:
-               ```bash
-               BRANCH="feature/${{ env.TODAY }}-SLUG"
-               git checkout -b "$BRANCH"
-               git add posts/ research/
-               git commit -m "feat: add post - POST_TITLE"
-               git push origin "$BRANCH"
-               gh pr create \
-                 --title "[Post] POST_TITLE" \
-                 --body "## POST_TITLE
-
-               ### Research Summary
-
-               RESEARCH_SUMMARY
-
-               ### Sources
-
-               SOURCES_LIST
-
-               ---
-
-               ### Reviewer Instructions
-
-               1. Review the post in \`posts/${{ env.TODAY }}-SLUG.md\`
-               2. To iterate locally:
-                  \`\`\`
-                  git checkout $BRANCH
-                  claude
-                  \`\`\`
-               3. Push changes and merge when satisfied.
-               4. Merging to \`main\` automatically publishes the post to LinkedIn."
-               ```
-
-            Replace SLUG, POST_TITLE, RESEARCH_SUMMARY, SOURCES_LIST, ONE_SENTENCE_ANGLE, ONE_SENTENCE_KEY_ANGLE, and FOUR_WEEKS_AGO with actual values derived from your research.
+            Read and execute the instructions in `.claude/skills/research/research.md` exactly.
+            RESEARCH_TOPIC, HASHTAGS, and GITHUB_REPO are available as environment variables.

@@ -45,7 +45,9 @@ linkedin-post-generator/
 ├── CLAUDE.md                         ← this file
 ├── .claude/
 │   └── skills/
-│       └── stop-slop/               # writing quality rules used in the research prompt
+│       ├── research/
+│       │   └── research.md          # /research skill — single source of truth for the research workflow
+│       └── stop-slop/               # writing quality rules, read by the research skill
 │           ├── stop-slop.md
 │           └── references/
 │               ├── phrases.md
@@ -84,15 +86,20 @@ The entire research + generation + PR creation cycle runs inside `anthropics/cla
    - `--max-turns 40` — enough for research + generation + git operations
    - A `prompt:` that instructs Claude to read existing posts/research, search, write files, create a branch, commit, and open a PR
 
-### What Claude does (from the prompt)
+### What Claude does
 
-1. Reads `posts/INDEX.md` and `research/INDEX.md` (not all post files) to avoid duplicating covered angles
-2. Reads `.claude/skills/stop-slop/` rules for writing quality
-3. Uses Tavily search to find 5-8 recent articles (last 4 weeks)
-4. Writes `research/YYYY-MM-DD-slug.md` with summary and sources
-5. Writes `posts/YYYY-MM-DD-slug.md` with the LinkedIn post (stop-slop rules applied)
-6. Appends one row to `posts/INDEX.md` and `research/INDEX.md`
-7. Runs `git checkout -b`, `git commit`, `git push`, `gh pr create`
+Claude executes `.claude/skills/research/research.md` — the single source of truth for the research workflow. Both CI and local runs reference this file; the prompt passed to Claude is just "read and execute this skill".
+
+The skill instructs Claude to:
+
+1. Read `date -u +%Y-%m-%d`, `$RESEARCH_TOPIC`, `$HASHTAGS` from environment
+2. Read `posts/INDEX.md` and `research/INDEX.md` to avoid duplicating covered angles
+3. Read all three stop-slop rule files (`.claude/skills/stop-slop/`) and apply them
+4. Use Tavily search to find 5–8 recent articles (last 4 weeks)
+5. Write `research/YYYY-MM-DD-slug.md` with summary and sources
+6. Write `posts/YYYY-MM-DD-slug.md` with the LinkedIn post
+7. Append one row to `posts/INDEX.md` and `research/INDEX.md`
+8. Run `git checkout -b`, `git commit`, `git push`, `gh pr create`
 
 ### Index files
 
@@ -181,7 +188,9 @@ POST_FILE_PATH=posts/some-post.md npm run publish
 
 ### Run research locally
 
-`scripts/research-local.sh` runs the same Claude Code prompt locally, reading from `.env` instead of Actions secrets. Prerequisites: Claude Code CLI installed (`claude` on PATH), `gh auth login` done, and `.env` populated.
+`scripts/research-local` loads `.env`, writes the Tavily MCP config, then runs `claude --print "read and execute .claude/skills/research/research.md"`. The skill is the single source of truth — identical behaviour to CI.
+
+Prerequisites: Claude Code CLI installed (`claude` on PATH), `gh auth login` done, `.env` populated.
 
 ```bash
 # One-time: add research vars to .env
@@ -193,7 +202,7 @@ HASHTAGS=AI,SoftwareEngineering
 npm run research
 ```
 
-The script writes a Tavily MCP config to `/tmp/mcp-config-local.json`, then runs `claude --print` with the same flags and prompt as the Actions workflow. Claude creates a branch, commits, and opens a PR exactly as it would in CI.
+Alternatively, open an interactive Claude Code session with env vars pre-loaded and type `/research`.
 
 ---
 
