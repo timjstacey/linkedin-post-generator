@@ -2,7 +2,9 @@ name: Research & Generate Post
 
 on:
   schedule:
-    - cron: '0 9 * * 1'  # Every Monday 09:00 UTC
+    - cron: '0 22 * * 0'  # Sun 22:00 UTC = Mon 08:00 AEST
+    - cron: '0 22 * * 2'  # Tue 22:00 UTC = Wed 08:00 AEST
+    - cron: '0 22 * * 4'  # Thu 22:00 UTC = Fri 08:00 AEST
   workflow_dispatch:
 
 permissions:
