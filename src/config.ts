@@ -1,20 +1,8 @@
 import 'dotenv/config';
 
 export interface Config {
-  anthropicApiKey: string;
-  tavilyApiKey?: string;
-  tavilyMaxSearches: number;
-  linkedinAccessToken?: string;
-  linkedinPersonUrn?: string;
-  researchTopic?: string;
-  hashtags: string[];
-  githubToken: string;
-  githubRepo: string;
-}
-
-function pickRandom<T>(arr: T[]): T {
-  if (arr.length === 0) throw new Error('RESEARCH_TOPICS list is empty');
-  return arr[Math.floor(Math.random() * arr.length)]!;
+  linkedinAccessToken: string;
+  linkedinPersonUrn: string;
 }
 
 function requireEnv(name: string): string {
@@ -23,31 +11,9 @@ function requireEnv(name: string): string {
   return val;
 }
 
-export function loadResearchConfig(): Config {
-  return {
-    anthropicApiKey: requireEnv('ANTHROPIC_API_KEY'),
-    tavilyApiKey: requireEnv('TAVILY_API_KEY'),
-    tavilyMaxSearches: parseInt(process.env['TAVILY_MAX_SEARCHES'] ?? '5', 10),
-    researchTopic: pickRandom(
-      requireEnv('RESEARCH_TOPIC')
-        .split(',')
-        .map((t) => t.trim())
-        .filter(Boolean)
-    ),
-    hashtags: (process.env['HASHTAGS'] ?? '').split(',').filter(Boolean),
-    githubToken: requireEnv('GITHUB_TOKEN'),
-    githubRepo: requireEnv('GITHUB_REPO'),
-  };
-}
-
 export function loadPublishConfig(): Config {
   return {
-    anthropicApiKey: process.env['ANTHROPIC_API_KEY'] ?? '',
-    tavilyMaxSearches: 0,
     linkedinAccessToken: requireEnv('LINKEDIN_ACCESS_TOKEN'),
     linkedinPersonUrn: requireEnv('LINKEDIN_PERSON_URN'),
-    hashtags: [],
-    githubToken: requireEnv('GITHUB_TOKEN'),
-    githubRepo: requireEnv('GITHUB_REPO'),
   };
 }

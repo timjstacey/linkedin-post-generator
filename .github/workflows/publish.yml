@@ -14,15 +14,33 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
+      - name: Detect new post file
+        id: detect-post
+        run: |
+          POST_FILE=$(git diff-tree --no-commit-id -r --name-status "$GITHUB_SHA" \
+            | grep -E "^A[[:space:]]+posts/.+\.md$" \
+            | awk '{print $2}' \
+            | head -1)
+          echo "post_file=$POST_FILE" >> "$GITHUB_OUTPUT"
+          if [ -z "$POST_FILE" ]; then
+            echo "No new post file found in this commit. Skipping."
+          else
+            echo "Found post file: $POST_FILE"
+          fi
+
       - uses: actions/setup-node@v4
+        if: steps.detect-post.outputs.post_file != ''
         with:
           node-version-file: .nvmrc
           cache: npm
+
       - run: npm ci
+        if: steps.detect-post.outputs.post_file != ''
+
       - run: npm run publish
+        if: steps.detect-post.outputs.post_file != ''
         env:
           LINKEDIN_ACCESS_TOKEN: ${{ secrets.LINKEDIN_ACCESS_TOKEN }}
           LINKEDIN_PERSON_URN: ${{ secrets.LINKEDIN_PERSON_URN }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GITHUB_REPO: ${{ github.repository }}
-          GITHUB_SHA: ${{ github.sha }}
+          POST_FILE_PATH: ${{ steps.detect-post.outputs.post_file }}

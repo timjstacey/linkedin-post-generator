@@ -5,9 +5,8 @@
   "license": "ISC",
   "author": "Tim Stacey",
   "type": "module",
-  "main": "src/research-workflow.ts",
+  "main": "src/publish-workflow.ts",
   "scripts": {
-    "research": "tsx src/research-workflow.ts",
     "publish": "tsx src/publish-workflow.ts",
     "auth:linkedin": "tsx scripts/linkedin-auth.ts",
     "refresh:linkedin": "tsx scripts/linkedin-refresh.ts",
@@ -28,9 +27,6 @@
     ]
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.54.0",
-    "@octokit/rest": "^22.0.0",
-    "@tavily/core": "^0.3.2",
     "dotenv": "^16.5.0"
   },
   "devDependencies": {
