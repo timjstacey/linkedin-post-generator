@@ -86,12 +86,24 @@ The entire research + generation + PR creation cycle runs inside `anthropics/cla
 
 ### What Claude does (from the prompt)
 
-1. Reads `posts/*.md` and `research/*.md` to avoid duplicating covered angles
+1. Reads `posts/INDEX.md` and `research/INDEX.md` (not all post files) to avoid duplicating covered angles
 2. Reads `.claude/skills/stop-slop/` rules for writing quality
 3. Uses Tavily search to find 5-8 recent articles (last 4 weeks)
 4. Writes `research/YYYY-MM-DD-slug.md` with summary and sources
 5. Writes `posts/YYYY-MM-DD-slug.md` with the LinkedIn post (stop-slop rules applied)
-6. Runs `git checkout -b`, `git commit`, `git push`, `gh pr create`
+6. Appends one row to `posts/INDEX.md` and `research/INDEX.md`
+7. Runs `git checkout -b`, `git commit`, `git push`, `gh pr create`
+
+### Index files
+
+`posts/INDEX.md` and `research/INDEX.md` are the primary context source for each run. Reading two small index files instead of all individual post/research files keeps token cost flat as the archive grows.
+
+| File                | Columns                              | Grows by  |
+| ------------------- | ------------------------------------ | --------- |
+| `posts/INDEX.md`    | Date, Title, Topic angle, Hashtags   | 1 row/run |
+| `research/INDEX.md` | Date, Title, Key angle, Source count | 1 row/run |
+
+At 50 posts, the index is ~2,500 tokens vs ~25,000 tokens for reading all post files individually.
 
 ### Secrets required
 
