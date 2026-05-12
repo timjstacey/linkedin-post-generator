@@ -44,11 +44,11 @@ jobs:
 
       - name: Configure tea
         env:
-          GITEA_TOKEN: ${{ gitea.token }}
+          GIT_PAT: ${{ secrets.GIT_PAT }}
         run: |
           tea login add \
             --url https://gitea.sillysamoyed.com \
-            --token "$GITEA_TOKEN" \
+            --token "$GIT_PAT" \
             --name origin
 
       - name: Write Tavily MCP config
