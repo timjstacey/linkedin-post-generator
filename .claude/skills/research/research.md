@@ -87,9 +87,9 @@ git checkout -b "$BRANCH"
 git add posts/ research/
 git commit -m "feat: add post - POST_TITLE"
 git push origin "$BRANCH"
-gh pr create \
+tea pr create \
   --title "[Post] POST_TITLE" \
-  --body "## POST_TITLE
+  --description "## POST_TITLE
 
 ### Research Summary
 
@@ -110,7 +110,9 @@ SOURCES_LIST
    claude
    \`\`\`
 3. Push changes and merge when satisfied.
-4. Merging to \`main\` automatically publishes the post to LinkedIn."
+4. Merging to \`main\` automatically publishes the post to LinkedIn." \
+  --head "$BRANCH" \
+  --base main
 ```
 
 Replace TODAY, SLUG, POST_TITLE, RESEARCH_SUMMARY, SOURCES_LIST, ONE_SENTENCE_ANGLE, ONE_SENTENCE_KEY_ANGLE, and FOUR_WEEKS_AGO with actual values.
