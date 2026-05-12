@@ -80,4 +80,5 @@ jobs:
             --model claude-sonnet-4-6 \
             --mcp-config /tmp/mcp-config.json \
             --allowedTools "Bash,Read,Write,Edit,mcp__tavily__*" \
+            -- \
             "Read and execute the instructions in .claude/skills/research/research.md exactly. RESEARCH_TOPIC, HASHTAGS are available as environment variables."
