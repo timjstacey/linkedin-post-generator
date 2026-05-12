@@ -1,0 +1,85 @@
+name: Research & Generate Post
+
+on:
+  schedule:
+    - cron: '0 22 * * 0' # Sun 22:00 UTC = Mon 08:00 AEST
+    - cron: '0 22 * * 2' # Tue 22:00 UTC = Wed 08:00 AEST
+    - cron: '0 22 * * 4' # Thu 22:00 UTC = Fri 08:00 AEST
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  research-and-post:
+    if: gitea.actor == 'tim' || gitea.event_name == 'schedule'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Configure git
+        run: |
+          git config user.name "gitea-actions[bot]"
+          git config user.email "gitea-actions[bot]@noreply.git.sillysamoyed.com"
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+
+      - name: Install Claude Code CLI
+        run: npm install -g @anthropic-ai/claude-code
+
+      - name: Install tea CLI
+        run: |
+          TEA_LATEST=$(curl -s "https://gitea.com/api/v1/repos/gitea/tea/releases" \
+            | grep -o '"tag_name":"v[^"]*"' | head -1 | cut -d'"' -f4)
+          curl -fsSL \
+            "https://gitea.com/gitea/tea/releases/download/${TEA_LATEST}/tea-${TEA_LATEST#v}-linux-amd64" \
+            -o /usr/local/bin/tea
+          chmod +x /usr/local/bin/tea
+          tea --version
+
+      - name: Configure tea
+        env:
+          GIT_PAT: ${{ secrets.GIT_PAT }}
+        run: |
+          tea login add \
+            --url https://gitea.sillysamoyed.com \
+            --token "$GIT_PAT" \
+            --name origin
+
+      - name: Write Tavily MCP config
+        env:
+          TAVILY_API_KEY: ${{ secrets.TAVILY_API_KEY }}
+        run: |
+          cat > /tmp/mcp-config.json << EOF
+          {
+            "mcpServers": {
+              "tavily": {
+                "command": "npx",
+                "args": ["-y", "tavily-mcp"],
+                "env": {
+                  "TAVILY_API_KEY": "${TAVILY_API_KEY}"
+                }
+              }
+            }
+          }
+          EOF
+
+      - name: Run research
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          RESEARCH_TOPIC: ${{ secrets.RESEARCH_TOPIC }}
+          HASHTAGS: ${{ secrets.HASHTAGS }}
+        run: |
+          claude --print \
+            --max-turns 40 \
+            --model claude-sonnet-4-6 \
+            --mcp-config /tmp/mcp-config.json \
+            --allowedTools "Bash,Read,Write,Edit,mcp__tavily__*" \
+            -- \
+            "Read and execute the instructions in .claude/skills/research/research.md exactly. RESEARCH_TOPIC, HASHTAGS are available as environment variables." \
+            2>&1 | tee /tmp/claude-research.log; exit "${PIPESTATUS[0]}"

@@ -62,7 +62,10 @@ Write `posts/TODAY-SLUG.md`:
 
 - First-person, professional but conversational voice
 - 150–300 words
-- End with 3–5 hashtags: include HASHTAGS env var values, add 1–2 topic-relevant ones
+- End with 3–5 hashtags using this logic:
+  - If `HASHTAGS` is empty or unset: generate 3–5 hashtags from the post content and topic
+  - If `HASHTAGS` is set: use every value from it, then add topic-relevant hashtags until the total reaches 3–5
+  - Never exceed 5 hashtags total
 - Apply every stop-slop rule: no adverbs, no passive voice, no binary contrasts, no em-dashes, no throat-clearing openers, active voice throughout, no inanimate subjects performing human actions
 
 ## 7. Update indexes
@@ -87,9 +90,9 @@ git checkout -b "$BRANCH"
 git add posts/ research/
 git commit -m "feat: add post - POST_TITLE"
 git push origin "$BRANCH"
-gh pr create \
+tea pr create \
   --title "[Post] POST_TITLE" \
-  --body "## POST_TITLE
+  --description "## POST_TITLE
 
 ### Research Summary
 
@@ -110,7 +113,9 @@ SOURCES_LIST
    claude
    \`\`\`
 3. Push changes and merge when satisfied.
-4. Merging to \`main\` automatically publishes the post to LinkedIn."
+4. Merging to \`main\` automatically publishes the post to LinkedIn." \
+  --head "$BRANCH" \
+  --base main
 ```
 
 Replace TODAY, SLUG, POST_TITLE, RESEARCH_SUMMARY, SOURCES_LIST, ONE_SENTENCE_ANGLE, ONE_SENTENCE_KEY_ANGLE, and FOUR_WEEKS_AGO with actual values.
