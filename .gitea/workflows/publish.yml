@@ -18,10 +18,9 @@ jobs:
       - name: Detect new post file
         id: detect-post
         run: |
-          POST_FILE=$(git diff-tree --no-commit-id -r --name-status "$GITHUB_SHA" \
-            | grep -E "^A[[:space:]]+posts/.+\.md$" \
-            | awk '{print $2}' \
-            | head -1)
+          POST_FILE=$(git diff-tree --no-commit-id -r -m --first-parent \
+            --diff-filter=A --name-only "$GITHUB_SHA" \
+            | grep -E "^posts/.+\.md$" | head -1 || true)
           echo "post_file=$POST_FILE" >> "$GITHUB_OUTPUT"
           if [ -z "$POST_FILE" ]; then
             echo "No new post file found in this commit. Skipping."
