@@ -1,232 +1,105 @@
-# LinkedIn Post Generator — Implementation Guide
+# CLAUDE.md
 
-This document is the source of truth for implementing this project. A future Claude session should read this file and carry out each step in order. Do not begin implementation until explicitly asked.
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ## What This Project Does
 
-Automated LinkedIn post generator that:
+Automated LinkedIn post generator:
 
-1. Runs on a GitHub Actions schedule
-2. Uses `anthropics/claude-code-action` + Tavily MCP to research a topic and generate a LinkedIn post
-3. Commits research notes and post to a feature branch, opens a PR
-4. When the PR is merged to `main`, publishes the post via the LinkedIn API
+1. Gitea Actions schedule runs `claude --print` + Tavily MCP to research a topic and write a post
+2. Claude commits research notes + post to a feature branch, opens a PR via `tea`
+3. Merging the PR to `main` triggers the publish workflow → LinkedIn API
 
-## Technology Decisions
-
-- **Runtime**: Node.js v24.15.0 (see `.nvmrc`)
-- **Language**: TypeScript, executed directly via `tsx` (no separate build step)
-- **Module system**: ES modules (`"type": "module"`)
-- **AI + research orchestration**: `anthropics/claude-code-action@v1` — runs full Claude Code agent in GitHub Actions; no SDK needed
-- **Web search**: Tavily MCP server (`tavily-mcp` via `npx`) — injected as an MCP server into the claude-code-action step; no npm package needed
-- **LinkedIn API**: native `fetch` → UGC Posts API
-- **Post file detection**: `git diff-tree` in the publish workflow — no GitHub API client needed
-- **Images**: text-only (deferred for later)
-
-### Why claude-code-action over @anthropic-ai/sdk
-
-`claude-code-action` runs Claude Code (the full CLI agent) inside Actions. It natively handles file I/O, git, and `gh` CLI — replacing `@anthropic-ai/sdk`, `@octokit/rest`, and all TypeScript orchestration code for the research workflow. The publish workflow is thin enough that Node.js + `fetch` suffices.
-
-### Why Tavily MCP over @tavily/core
-
-Tavily MCP delivers the same search capability via MCP protocol rather than an npm import. It runs as an ephemeral `npx` process alongside the claude-code-action step. `@tavily/core` is not installed.
-
-### Built-in WebSearch note
-
-Claude Code has built-in `WebSearch` and `WebFetch` tools that could eventually replace Tavily entirely. As of 2025, enabling them via `--allowedTools` is broken in claude-code-action ([issue #690](https://github.com/anthropics/claude-code-action/issues/690)). When that is fixed, Tavily MCP can be dropped and `TAVILY_API_KEY` removed.
-
----
-
-## Directory Structure
-
-```
-linkedin-post-generator/
-├── .env.example
-├── .gitignore
-├── CLAUDE.md                         ← this file
-├── .claude/
-│   └── skills/
-│       ├── research/
-│       │   └── research.md          # /research skill — single source of truth for the research workflow
-│       └── stop-slop/               # writing quality rules, read by the research skill
-│           ├── stop-slop.md
-│           └── references/
-│               ├── phrases.md
-│               └── structures.md
-├── .github/
-│   └── workflows/
-│       ├── research.yml              # scheduled: claude-code-action → research → post → PR
-│       └── publish.yml              # on merge to main: post to LinkedIn
-├── src/
-│   ├── config.ts                    # load + validate LinkedIn env vars (publish only)
-│   ├── linkedin.ts                  # LinkedIn UGC Posts API client
-│   └── publish-workflow.ts          # reads post file from disk → LinkedIn
-├── scripts/
-│   ├── linkedin-auth.ts             # OAuth flow to obtain access token
-│   └── linkedin-refresh.ts          # refresh expired access token
-├── posts/                           # generated posts (tracked in git)
-│   └── INDEX.md                     # one-row-per-post index; read instead of all post files
-├── research/                        # research notes (tracked in git)
-│   └── INDEX.md                     # one-row-per-research index; read instead of all research files
-└── tsconfig.json
-```
-
----
-
-## Research Workflow (`research.yml`)
-
-The entire research + generation + PR creation cycle runs inside `anthropics/claude-code-action@v1`. There is no `npm run research` script.
-
-### How it works
-
-1. `actions/checkout@v4` checks out the repo (with `fetch-depth: 0`)
-2. A step writes a Tavily MCP config to `/tmp/mcp-config.json`, injecting `TAVILY_API_KEY`
-3. `claude-code-action` runs Claude Code with:
-   - `--mcp-config /tmp/mcp-config.json` — makes Tavily search tools available
-   - `--allowedTools "Bash,Read,Write,Edit,mcp__tavily__*"` — scopes tool access
-   - `--max-turns 40` — enough for research + generation + git operations
-   - A `prompt:` that instructs Claude to read existing posts/research, search, write files, create a branch, commit, and open a PR
-
-### What Claude does
-
-Claude executes `.claude/skills/research/research.md` — the single source of truth for the research workflow. Both CI and local runs reference this file; the prompt passed to Claude is just "read and execute this skill".
-
-The skill instructs Claude to:
-
-1. Read `date -u +%Y-%m-%d`, `$RESEARCH_TOPIC`, `$HASHTAGS` from environment
-2. Read `posts/INDEX.md` and `research/INDEX.md` to avoid duplicating covered angles
-3. Read all three stop-slop rule files (`.claude/skills/stop-slop/`) and apply them
-4. Use Tavily search to find 5–8 recent articles (last 4 weeks)
-5. Write `research/YYYY-MM-DD-slug.md` with summary and sources
-6. Write `posts/YYYY-MM-DD-slug.md` with the LinkedIn post
-7. Append one row to `posts/INDEX.md` and `research/INDEX.md`
-8. Run `git checkout -b`, `git commit`, `git push`, `gh pr create`
-
-### Index files
-
-`posts/INDEX.md` and `research/INDEX.md` are the primary context source for each run. Reading two small index files instead of all individual post/research files keeps token cost flat as the archive grows.
-
-| File                | Columns                              | Grows by  |
-| ------------------- | ------------------------------------ | --------- |
-| `posts/INDEX.md`    | Date, Title, Topic angle, Hashtags   | 1 row/run |
-| `research/INDEX.md` | Date, Title, Key angle, Source count | 1 row/run |
-
-At 50 posts, the index is ~2,500 tokens vs ~25,000 tokens for reading all post files individually.
-
-### Secrets required
-
-| Secret              | Purpose                          |
-| ------------------- | -------------------------------- |
-| `ANTHROPIC_API_KEY` | Authenticates claude-code-action |
-| `TAVILY_API_KEY`    | Tavily MCP search                |
-| `RESEARCH_TOPIC`    | Comma-separated topic list       |
-| `HASHTAGS`          | Comma-separated hashtag list     |
-
-`GITHUB_TOKEN` is auto-provided by Actions.
-
----
-
-## Publish Workflow (`publish.yml`)
-
-Triggered on push to `main` when `posts/**` changes.
-
-### How it works
-
-1. `actions/checkout@v4`
-2. `git diff-tree` detects which `posts/*.md` file was added in the commit — stored as a step output
-3. If a post file is found: `npm ci` then `npm run publish` with `POST_FILE_PATH` set to the detected file
-4. `publish-workflow.ts` reads the file from disk, calls `createPost()`, logs the LinkedIn URN
-
-### Secrets required
-
-| Secret                  | Purpose                  |
-| ----------------------- | ------------------------ |
-| `LINKEDIN_ACCESS_TOKEN` | LinkedIn API auth        |
-| `LINKEDIN_PERSON_URN`   | LinkedIn author identity |
-
----
-
-## Node.js Modules (publish only)
-
-The npm package has only one runtime dependency: `dotenv`. All research/generation/git work runs inside `claude-code-action`.
-
-### `src/config.ts`
-
-- Loads `.env` via `dotenv/config`
-- Exports `loadPublishConfig()` returning `{ linkedinAccessToken, linkedinPersonUrn }`
-- Throws descriptive errors for missing vars
-
-### `src/linkedin.ts`
-
-- `createPost(text, accessToken, personUrn): Promise<string>`
-- `POST https://api.linkedin.com/v2/ugcPosts` via native `fetch`
-- Returns LinkedIn post URN on success; throws on non-2xx with error body
-
-### `src/publish-workflow.ts`
-
-- Reads `POST_FILE_PATH` env var (set by the workflow)
-- Reads the file from disk
-- Calls `createPost()` and logs the result
-
----
-
-## Local Development
-
-### LinkedIn auth (one-time setup)
+## Commands
 
 ```bash
-cp .env.example .env
-# Fill in LINKEDIN_CLIENT_ID and LINKEDIN_CLIENT_SECRET
-npm run auth:linkedin    # opens browser OAuth flow, writes token to .env
+npm run lint          # ESLint on src/
+npm run lint:fix      # ESLint --fix on src/
+npm run typecheck     # tsc --noEmit
+npm run format        # Prettier on everything
+npm run research      # run research locally (reads .env, calls claude --print)
+npm run publish       # publish a post (requires POST_FILE_PATH + LinkedIn env vars)
+npm run auth:linkedin # OAuth flow → writes LINKEDIN_ACCESS_TOKEN + LINKEDIN_PERSON_URN to .env
+npm run refresh:linkedin # refresh an expired LinkedIn token
 ```
 
-### Test publish locally
+**Git hooks (husky):**
+
+- `pre-commit` — runs `lint-staged` (prettier + eslint on staged files)
+- `pre-push` — runs `npm run typecheck`
+
+## Architecture
+
+### Two workflows (`.gitea/workflows/`)
+
+| Workflow        | Trigger                                                | What it does                                           |
+| --------------- | ------------------------------------------------------ | ------------------------------------------------------ |
+| `research.yml`  | Schedule (Mon/Wed/Fri 22:00 UTC) + `workflow_dispatch` | Runs `claude --print` → writes files → `tea pr create` |
+| `publish.yml`   | Push to `main` when `posts/**` changes                 | `git diff-tree` detects new post → `npm run publish`   |
+| `pr-checks.yml` | PR to `main`                                           | `npm run lint` + `npm run typecheck`                   |
+
+**This is a Gitea repo** (`git.sillysamoyed.com`), not GitHub. Workflows live in `.gitea/workflows/`. The `tea` CLI (not `gh`) creates PRs. The `GIT_PAT` secret authenticates `tea`.
+
+### Research workflow detail
+
+The workflow installs `claude` CLI globally, writes a Tavily MCP config to `/tmp/mcp-config.json`, then runs:
 
 ```bash
-# Set LINKEDIN_ACCESS_TOKEN and LINKEDIN_PERSON_URN in .env
-POST_FILE_PATH=posts/some-post.md npm run publish
+claude --print \
+  --max-turns 40 \
+  --model claude-sonnet-4-6 \
+  --mcp-config /tmp/mcp-config.json \
+  --allowedTools "Bash,Read,Write,Edit,mcp__tavily__*" \
+  -- "Read and execute the instructions in .claude/skills/research/research.md exactly."
 ```
 
-### Run research locally
+**`.claude/skills/research/research.md` is the single source of truth for the research workflow.** Both CI and `npm run research` (via `scripts/research-local`) use it. The skill:
 
-`scripts/research-local` loads `.env`, writes the Tavily MCP config, then runs `claude --print "read and execute .claude/skills/research/research.md"`. The skill is the single source of truth — identical behaviour to CI.
+1. Reads `RESEARCH_TOPIC` + `HASHTAGS` env vars
+2. Reads `posts/INDEX.md` + `research/INDEX.md` to avoid duplicate angles
+3. Reads all stop-slop rule files (`.claude/skills/stop-slop/`)
+4. Searches via Tavily MCP for 5–8 recent articles
+5. Writes `research/YYYY-MM-DD-slug.md` and `posts/YYYY-MM-DD-slug.md`
+6. Appends a row to each index
+7. Creates branch, commits, pushes, opens PR via `tea`
 
-Prerequisites: Claude Code CLI installed (`claude` on PATH), `gh auth login` done, `.env` populated.
+### Index files (token efficiency)
 
-```bash
-# One-time: add research vars to .env
-ANTHROPIC_API_KEY=sk-ant-...
-TAVILY_API_KEY=tvly-...
-RESEARCH_TOPIC="AI in software engineering,TypeScript best practices"
-HASHTAGS=AI,SoftwareEngineering
+`posts/INDEX.md` and `research/INDEX.md` grow by one row per run. Read these instead of individual post/research files — at 50 posts, indices are ~2,500 tokens vs ~25,000 tokens for all files.
 
-npm run research
-```
+### Publish workflow detail
 
-Alternatively, open an interactive Claude Code session with env vars pre-loaded and type `/research`.
+`git diff-tree` detects which `posts/*.md` file was added in the merge commit → sets `POST_FILE_PATH` → `npm run publish` → `src/publish-workflow.ts` reads the file and calls `createPost()`.
 
----
+### Source modules (`src/`)
 
-## Verification
+| File                  | Purpose                                                                |
+| --------------------- | ---------------------------------------------------------------------- |
+| `config.ts`           | `loadPublishConfig()` — loads + validates LinkedIn env vars            |
+| `linkedin.ts`         | `createPost()` — POST to LinkedIn UGC Posts API via `fetch`            |
+| `publish-workflow.ts` | Entry point for publish: reads `POST_FILE_PATH` → calls `createPost()` |
 
-1. **Publish locally**: set LinkedIn creds in `.env`, set `POST_FILE_PATH` to an existing post file, run `npm run publish`
-2. **Research via Actions**: trigger `research.yml` via `workflow_dispatch` — verify branch + PR created with research notes and post file
-3. **Publish via Actions**: merge the PR to `main` — verify `publish.yml` fires and posts to LinkedIn
-4. **Lint**: `npm run lint` passes with no errors
-5. **Typecheck**: `npm run typecheck` passes with no errors
+Only runtime dependency is `dotenv`. No SDK, no Octokit — native `fetch` only.
 
----
+### Writing quality rules
 
-## GitHub Actions Secrets Required
+`.claude/skills/stop-slop/` contains rules applied to every generated post: no adverbs, no passive voice, no binary contrasts, no em-dashes, no throat-clearing openers. The research skill reads all three files before writing.
 
-Configure in repository Settings → Secrets and variables → Actions:
+## Key operational notes
 
-| Secret                  | Required for      |
-| ----------------------- | ----------------- |
-| `ANTHROPIC_API_KEY`     | Research workflow |
-| `TAVILY_API_KEY`        | Research workflow |
-| `RESEARCH_TOPIC`        | Research workflow |
-| `HASHTAGS`              | Research workflow |
-| `LINKEDIN_ACCESS_TOKEN` | Publish workflow  |
-| `LINKEDIN_PERSON_URN`   | Publish workflow  |
+- LinkedIn access tokens expire every ~60 days. Run `npm run auth:linkedin`, then update `LINKEDIN_ACCESS_TOKEN` in Gitea secrets.
+- `scripts/research-local` is the local research runner — loads `.env`, writes MCP config, calls `claude --print`.
+- No build step — TypeScript runs directly via `tsx`.
+- `GITHUB_SHA` is set automatically by Gitea Actions (same env var name).
 
-`GITHUB_TOKEN` is auto-provided by Actions — no manual secret needed.
+## Secrets
+
+| Secret                  | Workflow                             |
+| ----------------------- | ------------------------------------ |
+| `ANTHROPIC_API_KEY`     | research                             |
+| `TAVILY_API_KEY`        | research                             |
+| `RESEARCH_TOPIC`        | research (comma-separated topics)    |
+| `HASHTAGS`              | research (comma-separated, optional) |
+| `GIT_PAT`               | research (`tea` authentication)      |
+| `LINKEDIN_ACCESS_TOKEN` | publish                              |
+| `LINKEDIN_PERSON_URN`   | publish                              |
