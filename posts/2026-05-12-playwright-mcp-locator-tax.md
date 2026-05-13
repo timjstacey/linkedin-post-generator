@@ -1,19 +1,13 @@
-A designer renames CSS classes during a rebrand sprint. Forty-seven Playwright tests snap. Nothing broke in the product.
+Two or three senior engineers doing test maintenance costs $75,000–$120,000 per year. That's not a testing problem. That's a staffing decision disguised as a process one.
 
-Someone pages the QA lead. The QA lead pages a senior dev. Two hours disappear. The sprint board shows zero bugs closed.
+Bug0 put numbers to what most engineering managers already know: broken test triage is high-cost, low-leverage work. Industry data puts the flaky test tax at $2,200 per developer per month in large enterprises. Forrester estimates AI self-healing tools cut those costs by more than 50%.
 
-Teams call this the locator tax. They pay it after every UI deploy.
+The cost is almost always invisible in planning. It shows up as slow sprints, senior engineers pulled off feature work, and QA leads triaging red builds instead of reviewing coverage. None of that shows up in a test maintenance line item.
 
-Playwright MCP changes the calculation. The Model Context Protocol server (`npx @playwright/mcp@latest`) gives AI agents direct access to the browser's accessibility tree. The AI reads the DOM structure, detects that a selector no longer resolves, finds the element by role and label, and writes the fix.
+What's changed is that AI agents can now read browser intent rather than CSS selectors. A class rename breaks a selector. It doesn't break what the element is. Agents that read the accessibility tree repair the test without touching the product logic — and flag the cases where something actually regressed.
 
-Currents.dev mapped the full agent stack in their 2026 ecosystem review: planner, generator, and healer agents running in sequence. The healer re-runs a failing test, inspects current UI state, determines whether it's a stale selector or a genuine regression, and patches the code. The healer flags real regressions for human review.
+One number to model before you scale it: roughly 114K tokens per AI-assisted test run at CI scale. That's a real cost. On a 500-test suite run daily, it adds up. Pilot on a stable subset, measure the triage time you recover, then expand.
 
-The cost data is concrete. Industry estimates put the flaky test tax at $2,200 per developer per month in large enterprises. Bug0 found two or three senior engineers handling test maintenance lose $75K–$120K per year to this work. Forrester estimates AI self-healing cuts those costs by more than 50%.
+The engineers you're paying senior rates to should be reviewing genuine regressions. If they're spending their weeks on CSS-rename fallout, the math on AI self-healing closes fast.
 
-The mechanism holds at scale because AI reads intent from the accessibility tree. Class name changes don't break the intent.
-
-Two caveats before you adopt: token costs at CI scale reach ~114K tokens per MCP-based test. Pilot on a stable subset before running it across your regression pack.
-
-QA engineers on teams using this shift from triaging every red build to reviewing failures that are genuine bugs.
-
-#Playwright #TestAutomation #SoftwareTesting #CI #DevOps
+#EngineeringLeadership #SoftwareEngineering #TestAutomation #DevProductivity #QualityAssurance

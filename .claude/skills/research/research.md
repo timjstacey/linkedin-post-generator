@@ -27,17 +27,27 @@ Read all three files in full before writing anything:
 
 Every rule applies to the post. No exceptions.
 
-## 3. Check existing coverage
+## 3. Read recent posts
+
+List `posts/*.md` excluding `INDEX.md`, sort by filename descending (YYYY-MM-DD prefix ensures lexicographic sort is correct), and read the three most recent files in full.
+
+Use these posts for two purposes:
+
+**Overlap detection.** Note the specific claims, statistics, product names, and mechanisms each post covers. A new post must not repeat the same specific facts or arguments even if the angle label looks different. "Playwright MCP enables AI agents" and "Playwright MCP cuts locator maintenance costs" share the same core mechanism — both are off-limits for a new Playwright MCP post.
+
+**Style calibration.** Note sentence length distribution, paragraph density, how each post opens (a number, a cost figure, a direct claim — not a question, not a scene-setter), and how each post closes (a direct statement or reader question, never a summary). Match this voice in the new post.
+
+## 4. Check existing coverage
 
 Read `posts/INDEX.md` and `research/INDEX.md`. Do not duplicate any listed angle or topic.
 
-## 4. Research
+## 5. Research
 
 Use the Tavily search tool to find 5–8 recent articles (last 4 weeks). Run multiple searches with different queries. Target a fresh, specific angle not already in the index.
 
 Derive a short SLUG from the post title: lowercase, hyphens only, no special characters.
 
-## 5. Write research notes
+## 6. Write research notes
 
 Write `research/TODAY-SLUG.md`:
 
@@ -56,7 +66,7 @@ KEY_INSIGHTS_HERE
 - URL_2
 ```
 
-## 6. Write LinkedIn post
+## 7. Write LinkedIn post
 
 Write `posts/TODAY-SLUG.md`:
 
@@ -68,7 +78,7 @@ Write `posts/TODAY-SLUG.md`:
   - Never exceed 5 hashtags total
 - Apply every stop-slop rule: no adverbs, no passive voice, no binary contrasts, no em-dashes, no throat-clearing openers, active voice throughout, no inanimate subjects performing human actions
 
-## 7. Update indexes
+## 8. Update indexes
 
 Append one row to `posts/INDEX.md` (preserve existing rows):
 
@@ -82,7 +92,7 @@ Append one row to `research/INDEX.md` (preserve existing rows):
 | TODAY | POST_TITLE | ONE_SENTENCE_KEY_ANGLE | NUMBER sources |
 ```
 
-## 8. Create branch and open PR
+## 9. Create branch and open PR
 
 ```bash
 BRANCH="feature/TODAY-SLUG"
