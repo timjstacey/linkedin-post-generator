@@ -1,6 +1,7 @@
 # Research Index
 
-| Date | Title | Key angle | Sources |
-| ---- | ----- | --------- | ------- |
-| 2026-05-12 | k6 2.0 Brings AI to Performance Testing | k6 2.0 previewed at GrafanaCON 2026 with native AI subcommands; mcp-k6 enables Playwright-to-k6 conversion; AI Autocorrelation in Studio since January 2026 | 6 sources |
-| 2026-05-12 | Playwright MCP and the Locator Tax | Playwright MCP server healer agents repair broken selectors via accessibility-tree inspection; flaky test tax costs $2,200/dev/month; AI self-healing cuts maintenance costs 50%+ | 6 sources |
+| Date       | Title                                                              | Key angle                                                                                                                                                                         | Sources   |
+| ---------- | ------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------- |
+| 2026-05-12 | k6 2.0 Brings AI to Performance Testing                            | k6 2.0 previewed at GrafanaCON 2026 with native AI subcommands; mcp-k6 enables Playwright-to-k6 conversion; AI Autocorrelation in Studio since January 2026                       | 6 sources |
+| 2026-05-14 | Playwright 1.59's Healer Agent Changes How Teams Fix Failing Tests | Playwright 1.59 ships page.screencast and browser.bind() enabling the Planner-Generator-Healer agent pattern; Healer fixes 75%+ of selector failures autonomously                 | 6 sources |
+| 2026-05-12 | Playwright MCP and the Locator Tax                                 | Playwright MCP server healer agents repair broken selectors via accessibility-tree inspection; flaky test tax costs $2,200/dev/month; AI self-healing cuts maintenance costs 50%+ | 6 sources |
