@@ -85,6 +85,10 @@ Only runtime dependency is `dotenv`. No SDK, no Octokit — native `fetch` only.
 
 `.claude/skills/stop-slop/` contains rules applied to every generated post: no adverbs, no passive voice, no binary contrasts, no em-dashes, no throat-clearing openers. The research skill reads all three files before writing.
 
+### Comment replies (`.claude/skills/reply/`)
+
+Manual workflow. User supplies a post path + comment text; the `reply` skill reads the post, applies stop-slop rules, optionally Tavily-searches if the comment needs fact-checking, and prints a drafted reply. No files, commits, or PRs — output goes to the conversation for the user to paste into LinkedIn.
+
 ## Key operational notes
 
 - LinkedIn access tokens expire every ~60 days. Run `npm run auth:linkedin`, then update `LINKEDIN_ACCESS_TOKEN` in Gitea secrets.
