@@ -8,4 +8,4 @@ Setup requires a paid Bitbucket Cloud plan and a Rovo Dev license. Claude Code C
 
 The scope is deliberate: automate the chores that matter but never make the sprint. Your engineers review everything. The agent handles the first draft.
 
-#Bitbucket #DevOps #CICD #TestAutomation #SoftwareDevelopment
+#Bitbucket #DevOps #CICD #TestAutomation #SoftwareDevelopment #Playwright
