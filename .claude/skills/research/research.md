@@ -46,6 +46,9 @@ Read `posts/INDEX.md` and `research/INDEX.md`. Do not duplicate any listed angle
 Use the Tavily search tool to find 5–8 recent articles (last 4 weeks). Run multiple searches with different queries. Target a fresh, specific angle not already in the index.
 
 Derive a short SLUG from the post title: lowercase, hyphens only, no special characters.
+Omit any subject year — the dated filename prefix already records when the post was
+written, so the slug should not repeat it (`playwright-ai-agents`, not
+`playwright-ai-agents-2025`).
 
 ## 6. Write research notes
 

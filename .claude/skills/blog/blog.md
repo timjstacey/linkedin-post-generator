@@ -43,7 +43,9 @@ Read both files in full:
 
 Derive the **site slug** by stripping the date prefix from the stem:
 `2026-05-24-playwright-ai-test-explosion` → `playwright-ai-test-explosion`. The
-stripped date (`2026-05-24`) becomes the post's `date`.
+stripped date (`2026-05-24`) becomes the post's `date`. Also drop a trailing
+`-YYYY` subject year if the slug still carries one (`playwright-ai-agents-2025` →
+`playwright-ai-agents`) — the `date` field already records when it was written.
 
 ## 3. Read writing rules
 
