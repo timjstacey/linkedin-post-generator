@@ -35,13 +35,25 @@ Use these posts for two purposes:
 
 **Overlap detection.** Note the specific claims, statistics, product names, and mechanisms each post covers. A new post must not repeat the same specific facts or arguments even if the angle label looks different. "Playwright MCP enables AI agents" and "Playwright MCP cuts locator maintenance costs" share the same core mechanism — both are off-limits for a new Playwright MCP post.
 
-**Style calibration.** Note sentence length distribution, paragraph density, how each post opens (a number, a cost figure, a direct claim — not a question, not a scene-setter), and how each post closes (a direct statement or reader question, never a summary). Match this voice in the new post.
+**Style calibration.** Note sentence length distribution and paragraph density, and match this voice in the new post. Do not copy how the recent posts open and close — the opener and closer come from the archetype you select in the next step, not from these posts. A post never closes with a summary, whatever its archetype.
 
 ## 4. Check existing coverage
 
 Read `posts/INDEX.md` and `research/INDEX.md`. Do not duplicate any listed angle or topic.
 
-## 5. Research
+## 5. Select archetype
+
+Read `.claude/skills/research/references/archetypes.md`.
+
+Read the `Archetype` column of `posts/INDEX.md`. Collect the archetype labels from the **last
+three rows** — those are off-limits this run. From the remaining archetypes, pick the one that
+best fits the research you are about to do. Read that archetype's opener / body / closer shape;
+you write the post to it in step 8.
+
+The archetype controls structure only. Every stop-slop rule still applies regardless of which
+archetype you pick.
+
+## 6. Research
 
 Use the Tavily search tool to find 5–8 recent articles (last 4 weeks). Run multiple searches with different queries. Target a fresh, specific angle not already in the index.
 
@@ -50,7 +62,7 @@ Omit any subject year — the dated filename prefix already records when the pos
 written, so the slug should not repeat it (`playwright-ai-agents`, not
 `playwright-ai-agents-2025`).
 
-## 6. Write research notes
+## 7. Write research notes
 
 Write `research/TODAY-SLUG.md`:
 
@@ -69,11 +81,12 @@ KEY_INSIGHTS_HERE
 - URL_2
 ```
 
-## 7. Write LinkedIn post
+## 8. Write LinkedIn post
 
 Write `posts/TODAY-SLUG.md`:
 
 - First-person, professional but conversational voice
+- Structure the post to the archetype you selected in step 5: its opener shape, body movement, and closer shape
 - 150–300 words
 - End with 3–5 hashtags using this logic:
   - If `HASHTAGS` is empty or unset: generate 3–5 hashtags from the post content and topic
@@ -81,12 +94,13 @@ Write `posts/TODAY-SLUG.md`:
   - Never exceed 5 hashtags total
 - Apply every stop-slop rule: no adverbs, no passive voice, no binary contrasts, no em-dashes, no throat-clearing openers, active voice throughout, no inanimate subjects performing human actions
 
-## 8. Update indexes
+## 9. Update indexes
 
-Append one row to `posts/INDEX.md` (preserve existing rows):
+Append one row to `posts/INDEX.md` (preserve existing rows). Put the archetype Label you
+selected in step 5 in the `Archetype` column, verbatim from `references/archetypes.md`:
 
 ```
-| TODAY | POST_TITLE | ONE_SENTENCE_ANGLE | #Hashtag1 #Hashtag2 |
+| TODAY | POST_TITLE | ONE_SENTENCE_ANGLE | ARCHETYPE_LABEL | #Hashtag1 #Hashtag2 |
 ```
 
 Append one row to `research/INDEX.md` (preserve existing rows):
@@ -95,7 +109,7 @@ Append one row to `research/INDEX.md` (preserve existing rows):
 | TODAY | POST_TITLE | ONE_SENTENCE_KEY_ANGLE | NUMBER sources |
 ```
 
-## 9. Create branch and open PR
+## 10. Create branch and open PR
 
 ```bash
 BRANCH="feature/TODAY-SLUG"
