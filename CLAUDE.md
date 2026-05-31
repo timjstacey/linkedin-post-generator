@@ -89,6 +89,12 @@ Only runtime dependency is `dotenv`. No SDK, no Octokit — native `fetch` only.
 
 Manual workflow. User supplies a post path + comment text; the `reply` skill reads the post, applies stop-slop rules, optionally Tavily-searches if the comment needs fact-checking, and prints a drafted reply. No files, commits, or PRs — output goes to the conversation for the user to paste into LinkedIn.
 
+### Blog posts (`.claude/skills/blog/`)
+
+Manual workflow, run **locally** after a LinkedIn PR merges. `/blog [slug]` takes a research/posts pair (defaults to the newest) and expands it into a long-form blog post for the separate **`resume-static-site`** repo (GitHub) — section headings, code examples, and outbound links to the research sources. The skill reads stop-slop rules and the site's live content-collection schema (`src/content.config.ts`), writes `src/content/posts/<slug>.md` into the site checkout, runs the site's `pnpm typecheck` to validate the schema, then branches, commits, and opens a PR with `gh`.
+
+The two repos never talk over CI — this is the only bridge, and it's a local command. The site repo path comes from `BLOG_REPO_DIR` (default `$HOME/Repositories/resume-static-site`). Posts land gated behind the site's `FEATURES.blog` flag; the skill never flips it.
+
 ## Key operational notes
 
 - LinkedIn access tokens expire every ~60 days. Run `npm run auth:linkedin`, then update `LINKEDIN_ACCESS_TOKEN` in Gitea secrets.
