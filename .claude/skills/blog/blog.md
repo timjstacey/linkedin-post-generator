@@ -38,7 +38,8 @@ Read both files in full:
 - `research/STEM.md` — the title (`# Research: TITLE`), the `## Summary`, and the
   `## Sources` URL list. The sources are the outbound links and the evidence.
 - `posts/STEM.md` — the LinkedIn post. Use it for the angle, the core claims, and
-  voice calibration. The blog post expands this; it does not copy it.
+  voice calibration. The blog post expands this; it does not copy it. The post ends
+  with a line of `#Hashtags` — capture those (see step 5, `hashtags`).
 
 Derive the **site slug** by stripping the date prefix from the stem:
 `2026-05-24-playwright-ai-test-explosion` → `playwright-ai-test-explosion`. The
@@ -66,14 +67,22 @@ Do not hardcode the schema — read it live from the site repo:
 
 Required frontmatter fields (confirm against `content.config.ts`):
 
-| Field      | Type                                            | Notes                                          |
-| ---------- | ----------------------------------------------- | ---------------------------------------------- |
-| `title`    | string                                          | The post title.                                |
-| `date`     | bare `YYYY-MM-DD` (parses to a JS Date)         | Unquoted, from the source stem.                |
-| `tag`      | `Strategy \| Practice \| Meta \| Team \| Tools` | Bare enum value. See mapping below.            |
-| `excerpt`  | string                                          | One sentence. Quote it if it contains a colon. |
-| `readMins` | integer                                         | `ceil(word_count / 220)`.                      |
-| `preview`  | list of `[prefix, text]` tuples                 | 8–12 lines; the terminal-style cover.          |
+| Field      | Type                                            | Notes                                               |
+| ---------- | ----------------------------------------------- | --------------------------------------------------- |
+| `title`    | string                                          | The post title.                                     |
+| `date`     | bare `YYYY-MM-DD` (parses to a JS Date)         | Unquoted, from the source stem.                     |
+| `tag`      | `Strategy \| Practice \| Meta \| Team \| Tools` | Bare enum value. See mapping below.                 |
+| `excerpt`  | string                                          | One sentence. Quote it if it contains a colon.      |
+| `readMins` | integer                                         | `ceil(word_count / 220)`.                           |
+| `preview`  | list of `[prefix, text]` tuples                 | 8–12 lines; the terminal-style cover.               |
+| `hashtags` | list of strings                                 | The LinkedIn footer tags, `#` stripped (see below). |
+
+**`hashtags`** — copy the tags from the last line of `posts/STEM.md` verbatim,
+dropping the leading `#` and any surrounding whitespace. `#Playwright #SoftwareTesting`
+becomes `[Playwright, SoftwareTesting]`. Preserve their casing — they drive the
+Tags sidebar on the site's `/blog` page, so they must match across posts (write
+`TestAutomation`, not `testautomation`). Do not invent new ones; use exactly what
+the LinkedIn post shipped with.
 
 **Tag mapping** (pick the closest; fall back to `Practice`):
 
@@ -98,6 +107,7 @@ date: 2026-05-24
 tag: Strategy
 excerpt: 'Most E2E suites are a contract test in a trench coat. Four checks earn a real browser.'
 readMins: 8
+hashtags: [Playwright, TestAutomation, SoftwareTesting, QualityAssurance]
 preview:
   - ['$', 'cat pushing-validation-out-of-the-ui.md']
   - ['#', '# Pushing validation out of the UI']
