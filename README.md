@@ -119,6 +119,22 @@ Each Monday a PR will appear titled `[Post] <title>`. To review:
    ```
 5. Merge the PR when happy — this triggers the publish workflow
 
+### Turning a post into a blog post
+
+After a LinkedIn PR merges, expand the same research into a long-form blog post in
+the [`resume-static-site`](https://github.com/timjstacey/resume-static-site) repo and
+open a PR there. Run locally with Claude Code:
+
+```
+/blog                     # newest research pair
+/blog 2026-05-24-some-slug # a specific pair
+```
+
+The `blog` skill reads `research/` + `posts/`, applies the same stop-slop rules, and
+writes a post (code examples + source links) into the site repo, then opens a GitHub
+PR with `gh`. It writes into `BLOG_REPO_DIR` (default `~/Repositories/resume-static-site`)
+and needs a local `gh` login. Posts land gated until you flip the site's blog flag.
+
 ### Triggering research manually
 
 Go to **Actions → Research & Generate Post → Run workflow** in the GitHub UI, or:
