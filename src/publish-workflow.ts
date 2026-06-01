@@ -1,10 +1,7 @@
-import { readFile, writeFile, appendFile } from 'node:fs/promises';
+import { readFile, appendFile } from 'node:fs/promises';
 import { basename } from 'node:path';
 import { loadPublishConfig } from './config.js';
 import { createPost } from './linkedin.js';
-import { setLinkedInUrl } from './post-index.js';
-
-const INDEX_PATH = 'posts/INDEX.md';
 
 /** Public URL for a created post, from the `urn:li:share:…` / `urn:li:ugcPost:…` URN. */
 function linkedInPostUrl(urn: string): string {
@@ -36,21 +33,9 @@ async function main() {
   console.log(`Published successfully. URN: ${postUrn}`);
   console.log(`Post URL: ${postUrl}`);
 
-  // Filename is YYYY-MM-DD-slug.md — derive the date (for the index row) and slug.
-  const stem = basename(postFilePath).replace(/\.md$/, '');
-  const postDate = stem.slice(0, 10);
-  const slug = stem.slice(11);
-
-  // Record the URL in the index so the blog routine can link back to the post.
-  // A posting failure already threw above; an index miss must not fail the run.
-  try {
-    const index = await readFile(INDEX_PATH, 'utf8');
-    await writeFile(INDEX_PATH, setLinkedInUrl(index, postDate, postUrl));
-    console.log(`Recorded LinkedIn URL in ${INDEX_PATH} for ${postDate}`);
-  } catch (err) {
-    console.warn(`Could not record LinkedIn URL in ${INDEX_PATH}: ${(err as Error).message}`);
-  }
-
+  // Hand the slug + URL to the workflow, which passes the URL to the blog routine
+  // as the backlink. (main is PR-protected, so we do not write the URL back here.)
+  const slug = basename(postFilePath).replace(/\.md$/, '').slice(11);
   await emitOutput('slug', slug);
   await emitOutput('post_url', postUrl);
 }

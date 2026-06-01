@@ -46,10 +46,9 @@ Read both files in full:
 - `posts/STEM.md` — the LinkedIn post. Use it for the angle, the core claims, and
   voice calibration. The blog post expands this; it does not copy it. The post ends
   with a line of `#Hashtags` — capture those (see step 5, `hashtags`).
-- `posts/INDEX.md` — find the row whose `Date` matches this pair's date and read its
-  `LinkedIn URL` cell. Capture it as `LINKEDIN_URL` for the backlink in step 5. The
-  publish workflow fills this after the post goes live; if it is empty (for example
-  a manual `/blog` run before the post merged), skip the backlink.
+  Capture the **LinkedIn URL** for the backlink in step 5 as `LINKEDIN_URL`: when run as the
+  blog routine, the publish workflow passes the live post URL in the trigger text — use it. For
+  a manual `/blog` run there is no URL, so skip the backlink.
 
 Derive the **site slug** by stripping the date prefix from the stem:
 `2026-05-24-playwright-ai-test-explosion` → `playwright-ai-test-explosion`. The

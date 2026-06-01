@@ -7,11 +7,7 @@ on:
       - 'posts/**'
 
 permissions:
-  contents: write
-
-concurrency:
-  group: publish-main
-  cancel-in-progress: false
+  contents: read
 
 jobs:
   publish:
@@ -52,26 +48,13 @@ jobs:
           LINKEDIN_PERSON_URN: ${{ secrets.LINKEDIN_PERSON_URN }}
           POST_FILE_PATH: ${{ steps.detect-post.outputs.post_file }}
 
-      - name: Record LinkedIn URL in the index
-        if: steps.detect-post.outputs.post_file != ''
-        run: |
-          if git diff --quiet -- posts/INDEX.md; then
-            echo "No index change to commit."
-          else
-            git config user.name "github-actions[bot]"
-            git config user.email "github-actions[bot]@users.noreply.github.com"
-            git add posts/INDEX.md
-            git commit -m "chore: record LinkedIn URL for ${{ steps.publish.outputs.slug }} [skip ci]"
-            git pull --rebase origin main
-            git push origin HEAD:main
-          fi
-
       - name: Fire blog routine
         if: steps.detect-post.outputs.post_file != ''
         env:
           BLOG_ROUTINE_FIRE_URL: ${{ secrets.BLOG_ROUTINE_FIRE_URL }}
           BLOG_ROUTINE_FIRE_TOKEN: ${{ secrets.BLOG_ROUTINE_FIRE_TOKEN }}
           SLUG: ${{ steps.publish.outputs.slug }}
+          POST_URL: ${{ steps.publish.outputs.post_url }}
         run: |
           if [ -z "$BLOG_ROUTINE_FIRE_URL" ] || [ -z "$BLOG_ROUTINE_FIRE_TOKEN" ]; then
             echo "Blog routine not configured (BLOG_ROUTINE_FIRE_URL/TOKEN unset). Skipping."
@@ -82,4 +65,4 @@ jobs:
             -H "anthropic-beta: experimental-cc-routine-2026-04-01" \
             -H "anthropic-version: 2023-06-01" \
             -H "Content-Type: application/json" \
-            -d "{\"text\": \"Run the blog skill for the merged LinkedIn post with slug '${SLUG}'. Its LinkedIn URL is recorded in posts/INDEX.md.\"}"
+            -d "{\"text\": \"Run the blog skill for the merged LinkedIn post. slug: '${SLUG}'. LinkedIn URL: ${POST_URL}\"}"
