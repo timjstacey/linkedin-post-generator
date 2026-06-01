@@ -55,7 +55,9 @@ archetype you pick.
 
 ## 6. Research
 
-Use the Tavily search tool to find 5–8 recent articles (last 4 weeks). Run multiple searches with different queries. Target a fresh, specific angle not already in the index.
+Find 5–8 recent articles (last 4 weeks). Run multiple searches with different queries. Target a fresh, specific angle not already in the index.
+
+Use **WebSearch** as the search tool. If it is unavailable in this environment (a local run outside the US, where WebSearch is region-restricted), use the **Tavily** MCP search tool instead — it is wired in `.mcp.json` for exactly this case. Either tool satisfies this step.
 
 Derive a short SLUG from the post title: lowercase, hyphens only, no special characters.
 Omit any subject year — the dated filename prefix already records when the post was
