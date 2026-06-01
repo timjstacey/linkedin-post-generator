@@ -8,10 +8,16 @@ metadata:
 # Blog Post Generation
 
 Take one LinkedIn-post research pair from this repo and write a long-form blog
-post into the `resume-static-site` repo, then open a GitHub PR. This runs
-**locally** (not in CI). The LinkedIn post is short; the blog post is the
-expanded, evidence-backed version of the same research — with section headings,
-code examples, and outbound links to the sources.
+post into the `resume-static-site` repo, then open a GitHub PR. This runs either
+**locally** (`/blog`) or as an automated **Claude Code routine** after a LinkedIn
+post merges. The LinkedIn post is short; the blog post is the expanded,
+evidence-backed version of the same research — with section headings, code
+examples, and outbound links to the sources.
+
+When this runs as a routine, the cloud environment's setup script clones
+`resume-static-site` into `BLOG_REPO_DIR` and installs the `gh` CLI (`gh` is not
+pre-installed in cloud sessions). Locally, both already exist. Either way the
+steps below are identical.
 
 ## 1. Runtime context and target repo
 
@@ -46,6 +52,11 @@ Derive the **site slug** by stripping the date prefix from the stem:
 stripped date (`2026-05-24`) becomes the post's `date`. Also drop a trailing
 `-YYYY` subject year if the slug still carries one (`playwright-ai-agents-2025` →
 `playwright-ai-agents`) — the `date` field already records when it was written.
+
+**Dedup.** If `$DIR/src/content/posts/SITE_SLUG.md` already exists, this pair has
+already been blogged. Stop and report it — do not open a duplicate PR. This guard
+matters most for the routine, which may fire for a pair that was blogged on an
+earlier run.
 
 ## 3. Read writing rules
 

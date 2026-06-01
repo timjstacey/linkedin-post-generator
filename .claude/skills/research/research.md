@@ -111,15 +111,18 @@ Append one row to `research/INDEX.md` (preserve existing rows):
 
 ## 10. Create branch and open PR
 
+The branch must be `claude/`-prefixed: routines only push to `claude/`-prefixed branches by
+default.
+
 ```bash
-BRANCH="feature/TODAY-SLUG"
+BRANCH="claude/TODAY-SLUG"
 git checkout -b "$BRANCH"
 git add posts/ research/
 git commit -m "feat: add post - POST_TITLE"
 git push origin "$BRANCH"
-tea pr create \
+gh pr create \
   --title "[Post] POST_TITLE" \
-  --description "## POST_TITLE
+  --body "## POST_TITLE
 
 ### Research Summary
 
