@@ -184,17 +184,19 @@ Re-run until clean.
 ## 7. Branch, commit, open the PR
 
 The site repo is GitHub; it uses `gh`, conventional commits, and the branch
-convention `type/slug` (no issue number needed). It rebase-merges PRs.
+convention `type/slug`. It rebase-merges PRs. Use the `claude/blog-SITE_SLUG`
+branch — the blog routine only pushes `claude/`-prefixed branches, and the site's
+branch-name hook accepts the `claude` type.
 
 ```bash
 cd "$DIR"
 git checkout main && git pull --ff-only
-git checkout -b "feat/blog-SITE_SLUG"
+git checkout -b "claude/blog-SITE_SLUG"
 git add "src/content/posts/SITE_SLUG.md"
 git commit -m "feat(blog): POST_TITLE"
-git push -u origin "feat/blog-SITE_SLUG"      # site pre-push hook re-runs typecheck
+git push -u origin "claude/blog-SITE_SLUG"    # site pre-push hook re-runs typecheck
 gh pr create \
-  --base main --head "feat/blog-SITE_SLUG" \
+  --base main --head "claude/blog-SITE_SLUG" \
   --title "feat(blog): POST_TITLE" \
   --body "$(cat <<'EOF'
 Long-form blog post generated from LinkedIn research (STEM).
