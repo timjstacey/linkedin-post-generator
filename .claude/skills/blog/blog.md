@@ -46,6 +46,10 @@ Read both files in full:
 - `posts/STEM.md` — the LinkedIn post. Use it for the angle, the core claims, and
   voice calibration. The blog post expands this; it does not copy it. The post ends
   with a line of `#Hashtags` — capture those (see step 5, `hashtags`).
+- `posts/INDEX.md` — find the row whose `Date` matches this pair's date and read its
+  `LinkedIn URL` cell. Capture it as `LINKEDIN_URL` for the backlink in step 5. The
+  publish workflow fills this after the post goes live; if it is empty (for example
+  a manual `/blog` run before the post merged), skip the backlink.
 
 Derive the **site slug** by stripping the date prefix from the stem:
 `2026-05-24-playwright-ai-test-explosion` → `playwright-ai-test-explosion`. The
@@ -156,6 +160,9 @@ preview:
   fact should trace to a source. This is the evidence requirement.
 - A `>` blockquote renders as a callout on the site — use one for the key takeaway
   if it earns it.
+- **Backlink to LinkedIn.** If `LINKEDIN_URL` (step 2) is set, link to the original
+  post once — a closing line such as `I first shared this [on LinkedIn](LINKEDIN_URL).`
+  Skip it when `LINKEDIN_URL` is empty.
 - Apply every stop-slop rule, same as the LinkedIn post: no adverbs, no passive
   voice, no binary contrasts, no em-dashes, no throat-clearing openers, active voice,
   no inanimate subjects performing human actions.
