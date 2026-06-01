@@ -10,7 +10,7 @@ Schedule (Mon/Wed/Fri)
        ▼
  Research routine (Claude Code, Anthropic cloud)
        │
-       ├─ Claude + Tavily (MCP) search recent articles on RESEARCH_TOPIC
+       ├─ Claude (WebSearch) finds recent articles on RESEARCH_TOPIC
        ├─ Claude picks an unused archetype and writes the post
        ├─ Commits research notes + post to a claude/… branch
        └─ Opens a PR for review (gh)
@@ -25,8 +25,7 @@ Schedule (Mon/Wed/Fri)
  GitHub Actions (publish.yml)
        │
        ├─ Publishes the post to LinkedIn
-       ├─ Records the post URL in posts/INDEX.md
-       └─ Fires the blog routine
+       └─ Fires the blog routine (passing the post URL)
               │
               ▼
  Blog routine (Claude Code) → long-form PR on resume-static-site
@@ -40,7 +39,7 @@ Schedule (Mon/Wed/Fri)
 
 - **Claude** — a Pro/Max subscription (routines run on subscription quota). Sign in to [claude.ai/code](https://claude.ai/code) with the GitHub account connected.
 - **Anthropic API key** — [console.anthropic.com](https://console.anthropic.com), for local `npm run research` only.
-- **Tavily** — [app.tavily.com](https://app.tavily.com)
+- **Tavily** — [app.tavily.com](https://app.tavily.com) — local `npm run research` only; the routine uses WebSearch (WebSearch is US-only, so local non-US runs fall back to Tavily)
 - **LinkedIn OAuth app** — [linkedin.com/developers/apps](https://www.linkedin.com/developers/apps)
   - Create an app, add the **Share on LinkedIn** and **Sign In with LinkedIn using OpenID Connect** products
   - Add `http://localhost:8080/callback` as an authorized redirect URL
@@ -58,7 +57,7 @@ Fill in `.env`:
 | Variable                 | Description                                             |
 | ------------------------ | ------------------------------------------------------- |
 | `ANTHROPIC_API_KEY`      | Anthropic API key (local research)                      |
-| `TAVILY_API_KEY`         | Tavily API key                                          |
+| `TAVILY_API_KEY`         | Tavily API key (local search fallback)                  |
 | `LINKEDIN_CLIENT_ID`     | LinkedIn OAuth app client ID                            |
 | `LINKEDIN_CLIENT_SECRET` | LinkedIn OAuth app client secret                        |
 | `RESEARCH_TOPIC`         | Topic to research, e.g. `"AI in software engineering"`  |
@@ -94,10 +93,13 @@ Create two routines at [claude.ai/code/routines](https://claude.ai/code/routines
 at this repo:
 
 1. **Research** — a **schedule** trigger (Mon/Wed/Fri). Prompt: run the research skill. Set
-   env vars `TAVILY_API_KEY`, `RESEARCH_TOPIC`, `HASHTAGS`.
-2. **Blog** — an **API** trigger. Prompt: run the blog skill for the slug passed in `text`. Set
-   env var `BLOG_REPO_DIR` and a setup script that clones `resume-static-site` and installs
-   `gh`. Copy its `/fire` URL + token into the `BLOG_ROUTINE_FIRE_*` GitHub secrets above.
+   env vars `RESEARCH_TOPIC`, `HASHTAGS`. Searches with WebSearch — no Tavily key or
+   `mcp.tavily.com` allowlist needed in the cloud.
+2. **Blog** — an **API** trigger, with **both** repos (`linkedin-post-generator` +
+   `resume-static-site`) as sources. Prompt: run the blog skill for the slug + URL passed in
+   `text` (the prompt locates the checkouts itself, so no `BLOG_REPO_DIR` or setup script is
+   needed — `gh` isn't required, the GitHub MCP opens the PR). Copy its `/fire` URL + token
+   into the `BLOG_ROUTINE_FIRE_*` GitHub secrets above.
 
 ---
 
@@ -145,8 +147,7 @@ POST_FILE_PATH=posts/2026-05-24-some-slug.md npm run publish   # publish one pos
 src/
   config.ts             load + validate LinkedIn env vars
   linkedin.ts           LinkedIn UGC Posts API client (returns the post URN)
-  post-index.ts         write the post URL into posts/INDEX.md
-  publish-workflow.ts   read merged post → LinkedIn → record URL
+  publish-workflow.ts   read merged post → LinkedIn → emit the post URL
 scripts/
   linkedin-auth.ts      OAuth flow to get tokens
   linkedin-refresh.ts   refresh an expired access token

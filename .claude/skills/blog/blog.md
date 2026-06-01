@@ -14,10 +14,11 @@ post merges. The LinkedIn post is short; the blog post is the expanded,
 evidence-backed version of the same research — with section headings, code
 examples, and outbound links to the sources.
 
-When this runs as a routine, the cloud environment's setup script clones
-`resume-static-site` into `BLOG_REPO_DIR` and installs the `gh` CLI (`gh` is not
-pre-installed in cloud sessions). Locally, both already exist. Either way the
-steps below are identical.
+When this runs as a routine, both `linkedin-post-generator` and `resume-static-site`
+are listed as routine sources, so both are checked out; the routine prompt locates
+the `resume-static-site` checkout and exports `BLOG_REPO_DIR`. The PR is opened via
+the GitHub MCP, so no `gh` install is needed. Locally both repos already exist and
+`gh` is on your PATH. Either way the steps below are identical.
 
 ## 1. Runtime context and target repo
 
