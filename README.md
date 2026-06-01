@@ -1,19 +1,19 @@
 # LinkedIn Post Generator
 
-Automatically researches a topic, generates a LinkedIn post, and opens a PR for review. Merging the PR publishes the post to LinkedIn.
+Automatically researches a topic, generates a LinkedIn post, and opens a PR for review. Merging the PR publishes the post to LinkedIn and cross-posts a long-form blog version to the site repo.
 
 ## How it works
 
 ```
-Every Monday 09:00 UTC
+Schedule (Mon/Wed/Fri)
        │
        ▼
- GitHub Actions (research.yml)
+ Research routine (Claude Code, Anthropic cloud)
        │
-       ├─ Claude + Tavily search recent articles on RESEARCH_TOPIC
-       ├─ Claude generates LinkedIn post
-       ├─ Commits research notes + post to feature branch
-       └─ Opens PR for review
+       ├─ Claude + Tavily (MCP) search recent articles on RESEARCH_TOPIC
+       ├─ Claude picks an unused archetype and writes the post
+       ├─ Commits research notes + post to a claude/… branch
+       └─ Opens a PR for review (gh)
               │
               ▼
        You review & edit the post in the PR
@@ -24,79 +24,80 @@ Every Monday 09:00 UTC
               ▼
  GitHub Actions (publish.yml)
        │
-       └─ Publishes post to LinkedIn
+       ├─ Publishes the post to LinkedIn
+       ├─ Records the post URL in posts/INDEX.md
+       └─ Fires the blog routine
+              │
+              ▼
+ Blog routine (Claude Code) → long-form PR on resume-static-site
 ```
 
 ---
 
 ## First-time setup
 
-### Step 1 — Get API keys
+### API keys and accounts
 
-You need accounts and API keys for:
-
-- **Anthropic** — [console.anthropic.com](https://console.anthropic.com)
+- **Claude** — a Pro/Max subscription (routines run on subscription quota). Sign in to [claude.ai/code](https://claude.ai/code) with the GitHub account connected.
+- **Anthropic API key** — [console.anthropic.com](https://console.anthropic.com), for local `npm run research` only.
 - **Tavily** — [app.tavily.com](https://app.tavily.com)
 - **LinkedIn OAuth app** — [linkedin.com/developers/apps](https://www.linkedin.com/developers/apps)
   - Create an app, add the **Share on LinkedIn** and **Sign In with LinkedIn using OpenID Connect** products
   - Add `http://localhost:8080/callback` as an authorized redirect URL
   - Note the **Client ID** and **Client Secret**
 
-### Step 2 — Install dependencies
+### Local environment (for `npm run research` / `publish` / `auth:linkedin`)
 
 ```bash
 npm ci
-```
-
-### Step 3 — Configure local environment
-
-```bash
 cp .env.example .env
 ```
 
 Fill in `.env`:
 
-| Variable                 | Description                                                   |
-| ------------------------ | ------------------------------------------------------------- |
-| `ANTHROPIC_API_KEY`      | Anthropic API key                                             |
-| `TAVILY_API_KEY`         | Tavily API key                                                |
-| `LINKEDIN_CLIENT_ID`     | LinkedIn OAuth app client ID                                  |
-| `LINKEDIN_CLIENT_SECRET` | LinkedIn OAuth app client secret                              |
-| `RESEARCH_TOPIC`         | Topic to research, e.g. `"AI in software engineering"`        |
-| `HASHTAGS`               | Comma-separated hashtags, e.g. `AI,SoftwareEngineering`       |
-| `GITHUB_TOKEN`           | Personal access token with `contents` + `pull-requests` write |
-| `GITHUB_REPO`            | Your repo in `owner/repo` format, e.g. `timjstacey/my-repo`   |
+| Variable                 | Description                                             |
+| ------------------------ | ------------------------------------------------------- |
+| `ANTHROPIC_API_KEY`      | Anthropic API key (local research)                      |
+| `TAVILY_API_KEY`         | Tavily API key                                          |
+| `LINKEDIN_CLIENT_ID`     | LinkedIn OAuth app client ID                            |
+| `LINKEDIN_CLIENT_SECRET` | LinkedIn OAuth app client secret                        |
+| `RESEARCH_TOPIC`         | Topic to research, e.g. `"AI in software engineering"`  |
+| `HASHTAGS`               | Comma-separated hashtags, e.g. `AI,SoftwareEngineering` |
 
-Leave `LINKEDIN_ACCESS_TOKEN` and `LINKEDIN_PERSON_URN` blank — the next step fills them in.
-
-### Step 4 — Authenticate with LinkedIn
+Leave `LINKEDIN_ACCESS_TOKEN` and `LINKEDIN_PERSON_URN` blank — `auth:linkedin` fills them.
+Local PR creation uses your `gh` login, so run `gh auth login` once.
 
 ```bash
-npm run auth:linkedin
+npm run auth:linkedin   # opens a browser, writes the two LINKEDIN_* values into .env
 ```
 
-This opens a browser, asks you to authorise the app, then writes `LINKEDIN_ACCESS_TOKEN` and `LINKEDIN_PERSON_URN` into `.env`.
+> **Token expiry:** LinkedIn access tokens last ~60 days. When the token expires, re-run `npm run auth:linkedin` and update the `LINKEDIN_ACCESS_TOKEN` GitHub Actions secret.
 
-> **Token expiry:** LinkedIn access tokens last 60 days. When the token expires, re-run `npm run auth:linkedin` and repeat Step 5 to update the GitHub secret.
+### GitHub Actions secrets
 
-### Step 5 — Add GitHub Actions secrets
+In the repo: **Settings → Secrets and variables → Actions → New repository secret**. Add as
+**Secrets** (not Variables — only Secrets are masked in logs):
 
-In your repo: **Settings → Secrets and variables → Actions → New repository secret**
+| Secret                    | Where to get it                                |
+| ------------------------- | ---------------------------------------------- |
+| `LINKEDIN_ACCESS_TOKEN`   | Copy from `.env` after running `auth:linkedin` |
+| `LINKEDIN_PERSON_URN`     | Copy from `.env` after running `auth:linkedin` |
+| `BLOG_ROUTINE_FIRE_URL`   | The blog routine's API `/fire` URL (see below) |
+| `BLOG_ROUTINE_FIRE_TOKEN` | The blog routine's API bearer token            |
 
-| Secret                  | Where to get it                                |
-| ----------------------- | ---------------------------------------------- |
-| `ANTHROPIC_API_KEY`     | Anthropic console                              |
-| `TAVILY_API_KEY`        | Tavily dashboard                               |
-| `RESEARCH_TOPIC`        | Your chosen topic string                       |
-| `HASHTAGS`              | Comma-separated, optional                      |
-| `LINKEDIN_ACCESS_TOKEN` | Copy from `.env` after running `auth:linkedin` |
-| `LINKEDIN_PERSON_URN`   | Copy from `.env` after running `auth:linkedin` |
+`GITHUB_TOKEN` is provided automatically by Actions — do not add it manually. The publish
+workflow no-ops the blog-routine fire step until `BLOG_ROUTINE_FIRE_*` are set.
 
-`GITHUB_TOKEN` is provided automatically by Actions — do not add it manually.
+### Routines
 
-### Step 6 — Add GitHub Actions workflow files
+Create two routines at [claude.ai/code/routines](https://claude.ai/code/routines), both pointed
+at this repo:
 
-Create `.github/workflows/research.yml` and `.github/workflows/publish.yml` using the YAML in `CLAUDE.md` Step 4. These activate the scheduled research and publish-on-merge behaviours.
+1. **Research** — a **schedule** trigger (Mon/Wed/Fri). Prompt: run the research skill. Set
+   env vars `TAVILY_API_KEY`, `RESEARCH_TOPIC`, `HASHTAGS`.
+2. **Blog** — an **API** trigger. Prompt: run the blog skill for the slug passed in `text`. Set
+   env var `BLOG_REPO_DIR` and a setup script that clones `resume-static-site` and installs
+   `gh`. Copy its `/fire` URL + token into the `BLOG_ROUTINE_FIRE_*` GitHub secrets above.
 
 ---
 
@@ -104,66 +105,37 @@ Create `.github/workflows/research.yml` and `.github/workflows/publish.yml` usin
 
 ### Reviewing a generated post
 
-Each Monday a PR will appear titled `[Post] <title>`. To review:
+A PR titled `[Post] <title>` appears on the schedule. To review:
 
 1. Open the PR on GitHub
-2. Read `posts/YYYY-MM-DD-slug.md` — this is what gets published to LinkedIn verbatim
+2. Read `posts/YYYY-MM-DD-slug.md` — published to LinkedIn verbatim
 3. Read `research/YYYY-MM-DD-slug.md` — the source research and citations
-4. To edit the post locally:
+4. To edit locally:
    ```bash
-   git fetch && git checkout feature/YYYY-MM-DD-slug
-   # edit posts/YYYY-MM-DD-slug.md directly, or use Claude Code:
-   claude
-   git add posts/YYYY-MM-DD-slug.md && git commit -m "refine post"
-   git push
+   git fetch && git checkout claude/YYYY-MM-DD-slug
+   claude   # or edit posts/YYYY-MM-DD-slug.md directly
+   git commit -am "refine post" && git push
    ```
-5. Merge the PR when happy — this triggers the publish workflow
+5. Merge the PR when happy — this triggers publish + the blog routine
 
-### Turning a post into a blog post
+### Turning a post into a blog post (manually)
 
-After a LinkedIn PR merges, expand the same research into a long-form blog post in
-the [`resume-static-site`](https://github.com/timjstacey/resume-static-site) repo and
-open a PR there. Run locally with Claude Code:
+The blog routine does this automatically on merge. To run it by hand:
 
 ```
-/blog                     # newest research pair
+/blog                      # newest research pair
 /blog 2026-05-24-some-slug # a specific pair
 ```
 
-The `blog` skill reads `research/` + `posts/`, applies the same stop-slop rules, and
-writes a post (code examples + source links) into the site repo, then opens a GitHub
-PR with `gh`. It writes into `BLOG_REPO_DIR` (default `~/Repositories/resume-static-site`)
-and needs a local `gh` login. Posts land gated until you flip the site's blog flag.
-
-### Triggering research manually
-
-Go to **Actions → Research & Generate Post → Run workflow** in the GitHub UI, or:
-
-```bash
-npm run research
-```
+It writes into `BLOG_REPO_DIR` (default `~/Repositories/resume-static-site`), needs a local
+`gh` login, and lands the post gated behind the site's blog flag.
 
 ### Running locally end-to-end
 
 ```bash
-# Research and open a PR (uses .env for all config)
-npm run research
-
-# Publish a specific post (simulates what Actions does on merge)
-GITHUB_SHA=<merge-commit-sha> npm run publish
+npm run research                                    # research + open a PR (uses .env)
+POST_FILE_PATH=posts/2026-05-24-some-slug.md npm run publish   # publish one post
 ```
-
----
-
-## Maintenance
-
-### Rotating the LinkedIn access token (every ~60 days)
-
-```bash
-npm run auth:linkedin
-```
-
-Then update `LINKEDIN_ACCESS_TOKEN` in GitHub secrets with the new value from `.env`.
 
 ---
 
@@ -171,19 +143,23 @@ Then update `LINKEDIN_ACCESS_TOKEN` in GitHub secrets with the new value from `.
 
 ```
 src/
-  config.ts             load + validate env vars
-  research.ts           Claude + Tavily research loop
-  post-generator.ts     Claude post generation
-  linkedin.ts           LinkedIn UGC Posts API client
-  github.ts             branch / commit / PR via Octokit
-  research-workflow.ts  orchestrates research → PR
-  publish-workflow.ts   reads merged post → LinkedIn
+  config.ts             load + validate LinkedIn env vars
+  linkedin.ts           LinkedIn UGC Posts API client (returns the post URN)
+  post-index.ts         write the post URL into posts/INDEX.md
+  publish-workflow.ts   read merged post → LinkedIn → record URL
 scripts/
   linkedin-auth.ts      OAuth flow to get tokens
-  linkedin-refresh.ts   refresh an expired access token (requires refresh token support)
-posts/                  generated posts (committed to git)
-research/               research notes (committed to git)
+  linkedin-refresh.ts   refresh an expired access token
+  research-local        local research runner (loads .env, calls claude --print)
+.claude/skills/
+  research/             research + post generation (+ references/archetypes.md)
+  blog/                 long-form cross-post to resume-static-site
+  reply/                draft a reply to a LinkedIn comment
+  stop-slop/            writing-quality rules
 .github/workflows/
-  research.yml          scheduled: research → post → PR
-  publish.yml           on merge to main: post to LinkedIn
+  publish.yml           on merge to main: post to LinkedIn, record URL, fire blog routine
+  pr-checks.yml         lint + typecheck on PRs
+.mcp.json               Tavily remote HTTP MCP server
+posts/                  generated posts (committed) + INDEX.md
+research/               research notes (committed) + INDEX.md
 ```
