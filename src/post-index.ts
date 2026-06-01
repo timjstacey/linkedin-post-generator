@@ -25,7 +25,14 @@ export function setLinkedInUrl(indexMarkdown: string, postDate: string, url: str
 
   // Cells: ['', ' Date ', ' Title ', ' Topic ', ' Archetype ', ' Hashtags ', ' LinkedIn URL ', '']
   // The LinkedIn URL cell is the last content cell (second-to-last split element).
+  // Bail loudly on an unexpected column count rather than clobber another cell
+  // (e.g. overwriting Hashtags on an old 5-column row).
   const cells = lines[target].split('|');
+  if (cells.length !== 8) {
+    throw new Error(
+      `posts/INDEX.md row for ${postDate} has ${cells.length - 2} columns, expected 6 (missing LinkedIn URL column?)`
+    );
+  }
   cells[cells.length - 2] = ` ${url} `;
   lines[target] = cells.join('|');
 
