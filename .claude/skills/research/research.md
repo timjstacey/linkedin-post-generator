@@ -97,10 +97,11 @@ Write `posts/TODAY-SLUG.md`:
 ## 9. Update indexes
 
 Append one row to `posts/INDEX.md` (preserve existing rows). Put the archetype Label you
-selected in step 5 in the `Archetype` column, verbatim from `references/archetypes.md`:
+selected in step 5 in the `Archetype` column, verbatim from `references/archetypes.md`. Leave
+the `LinkedIn URL` column empty — the publish workflow fills it after the post goes live:
 
 ```
-| TODAY | POST_TITLE | ONE_SENTENCE_ANGLE | ARCHETYPE_LABEL | #Hashtag1 #Hashtag2 |
+| TODAY | POST_TITLE | ONE_SENTENCE_ANGLE | ARCHETYPE_LABEL | #Hashtag1 #Hashtag2 |  |
 ```
 
 Append one row to `research/INDEX.md` (preserve existing rows):
