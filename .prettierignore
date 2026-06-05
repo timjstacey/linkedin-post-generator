@@ -1,0 +1,6 @@
+# LinkedIn post files are plain text sent verbatim to the LinkedIn API, not
+# Markdown. Prettier's Markdown formatter escapes characters like * and _,
+# which then publish as literal backslashes. Keep prettier off them.
+# INDEX.md is a real Markdown table, so it stays formatted.
+posts/*.md
+!posts/INDEX.md
