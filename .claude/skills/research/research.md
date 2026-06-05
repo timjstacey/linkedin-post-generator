@@ -87,6 +87,7 @@ KEY_INSIGHTS_HERE
 
 Write `posts/TODAY-SLUG.md`:
 
+- **Plain text only — no Markdown.** This file is sent verbatim to the LinkedIn API, which has no Markdown renderer. Do not use `**bold**`, `_italics_`, `` `backticks` ``, `#` headings, `-`/`*` bullet markers, or `[text](url)` links. They display as literal characters in the published post. Write code identifiers and file paths as bare text (`actions/cache`, not `` `actions/cache` ``). A numbered list is plain lines like `1. ...`. Separate sections with blank lines, not headings.
 - First-person, professional but conversational voice
 - Structure the post to the archetype you selected in step 5: its opener shape, body movement, and closer shape
 - 150–300 words
