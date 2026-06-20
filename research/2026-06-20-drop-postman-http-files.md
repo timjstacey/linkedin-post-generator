@@ -4,11 +4,15 @@
 
 ## Summary
 
-A teardown comparing Postman against the pairing of cURL (for adhoc requests) and checked-in `.http` files (for documented, reusable requests), run from the VS Code REST Client extension or the JetBrains IDEs' built-in HTTP client. The angle: requests are code, so they belong in the repo next to the source they hit, not in a vendor's cloud workspace. This is the dedicated follow-up to the Playwright login-form post, which deliberately cut its Postman aside to give the topic its own piece.
+A teardown that splits the two jobs teams stretch Postman across, and sends each to a better home: the quick "what does this response look like" check goes to cURL plus checked-in `.http` files (VS Code REST Client or the JetBrains built-in HTTP client); the automated e2e API tests go to Playwright (APIRequestContext). The angle: requests are code, so they belong in the repo next to the source they hit, not in a vendor's cloud workspace, and a saved request one developer runs by hand is not a test. This is the dedicated follow-up to the Playwright login-form post, which deliberately cut its Postman aside to give the topic its own piece.
+
+Lived-experience opener (the author's, stated as the field reality): on many teams every developer keeps a private Postman collection — none checked in, none shared — so the same login request gets rebuilt by different people who never see each other's work. That privacy is the core failure the post attacks.
 
 The argument and the supporting facts:
 
-- Two jobs, two tools already on the machine. cURL handles the one-off poke with no app and no account. A `.http` file handles the request a team reuses. Both the REST Client extension (VS Code) and the JetBrains built-in HTTP client read the same plain-text `.http` format, so the file is editor-agnostic and portable.
+- Postman straddles two distinct jobs it should not hold together: (1) the exploratory "does my change work" check during development, and (2) the API test coverage that guards an endpoint in CI. Splitting them is the spine of the post.
+- Job one (the check): cURL handles a one-off poke in a single line, no app and no account. A `.http` file handles the request worth keeping. Both the REST Client extension (VS Code) and the JetBrains built-in HTTP client read the same plain-text `.http` format, so the file is editor-agnostic and portable.
+- Job two (the tests): write them in Playwright. APIRequestContext runs the API checks in the same project, runner, and CI job as the browser tests (this is the mechanism the 2026-06-18 post covers). A saved Postman request a single developer runs manually runs nowhere when that developer is away. Postman is not the place for e2e API tests; the test framework is.
 - The load-bearing advantage is version control. A `.http` file lives beside the code it calls, travels in the same pull request, and shows up in code review. Rename an endpoint and the request change lands in the same diff. The API examples version with the source instead of drifting in a shared workspace.
 - Postman's friction, all post-2023: the desktop app requires a login, the install is roughly 900MB, and collections sync to Postman's cloud. Scratch Pad (the offline mode) was retired.
 - Cloud sync hazard: Postman has overwritten one teammate's collection edits with another's with no warning, and recovering the lost version means digging through version history, which sits behind a paid tier. A merge conflict in a checked-in `.http` file is an ordinary git conflict the team already knows how to resolve.
@@ -19,6 +23,7 @@ The argument and the supporting facts:
 
 ## Sources
 
+- https://playwright.dev/docs/api-testing
 - https://www.jetbrains.com/help/idea/http-client-in-product-code-editor.html
 - https://testfully.io/blog/http-files/
 - https://medium.com/codecodecode/ship-your-api-requests-as-code-a-practical-guide-to-http-e095a8c724ca
