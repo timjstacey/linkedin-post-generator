@@ -6,6 +6,12 @@ the closer. Every stop-slop word rule still applies to every archetype with no e
 adverbs, no passive voice, no binary contrasts, no em-dashes, no throat-clearing openers,
 active voice throughout, no inanimate subjects performing human actions.
 
+**No archetype licenses fabrication.** None of these shapes is permission to invent a personal
+story, project, team, incident, or result. Every concrete claim traces to the research notes
+and sources. An opener that "puts the reader in a situation" describes a situation reported in
+the research or one the reader recognizes, attributed honestly — not a scene you stage as your
+own lived experience.
+
 ## How to use this file
 
 The skill picks one archetype per run (see `research.md`, "Select archetype"). Read that
@@ -32,14 +38,17 @@ Challenge an assumption the field treats as settled; defend the counter-position
 - **Body:** the evidence and reasoning for the counter-position; name the cost of the consensus view.
 - **Closer:** the reframed position as a direct claim.
 
-### Field note / lessons-learned
+### Failure mode / lessons-learned
 
-**Label:** `Field note`
-First-person account of using a tool or practice — what happened, what it taught.
+**Label:** `Failure mode`
+A documented way a tool or practice breaks, and what the fix teaches. Drawn from the research,
+not from a personal anecdote. Do not write it in the first person as something you did or a
+project you worked on — describe the reported failure and attribute it ("teams hit this when…",
+"the issue tracker shows…", "the docs warn…").
 
-- **Opener:** the specific situation you were in (a real task, not generic scene-setting).
-- **Body:** what you did, what broke or worked, the mechanism behind the outcome.
-- **Closer:** the lesson as a direct statement, or what you do differently now.
+- **Opener:** the specific failure the research describes (a concrete reported case, not generic scene-setting, not a staged personal story).
+- **Body:** the mechanism behind the failure and the fix the sources document; cite what makes it real.
+- **Closer:** the lesson as a direct statement, or the rule a reader should adopt.
 
 ### Playbook / how-to
 
