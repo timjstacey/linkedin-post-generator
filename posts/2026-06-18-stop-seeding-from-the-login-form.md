@@ -1,13 +1,15 @@
-A common Playwright setup signs in through the login form once, saves storageState, and feeds that session to every test. Now every test depends on the form. Break the form and the whole suite goes red, including the tests that never touch login. The one signal you want, "the login form broke", drowns in a hundred unrelated failures.
+Your Playwright suite should not turn red in a hundred places when one login form changes. The fix is a test setup any QA or platform engineer can apply to a parallel suite.
 
-Split the two jobs. Write one test that drives the login form and asserts it works. For everything else, authenticate through the login API inside a fixture. When the form breaks and the API holds, your login test points at the form and the rest of the suite keeps reporting what works.
+Write one test for the login form. It drives the real form, submits credentials, and asserts a session starts. That test owns the question "does login work".
 
-Go past a single shared session. Build a factory fixture that registers a fresh user per worker through the API, then pull it into a test as `async ({ createUser }) => { const user = await createUser({ balance: 5000 }) }`. That one call gives the checkout test a registered user with a funded account.
+Authenticate everything else through the API when your app exposes a login endpoint. A fixture posts credentials, then calls request.storageState() to save the session under playwright/.auth. Every other test loads that state and skips the form. Apps behind SSO or a third-party identity provider have no such endpoint, so keep the UI login as the setup step there. Playwright supports both routes.
 
-`createUser({ balance: 5000 })` beats a drawer full of fixtures named `testUser`, `testUserWithMoney`, `testUserWithMoneyAndKyc`. One fixture, composable state. Each worker gets its own user, so parallel workers stop trampling each other's data.
+Authenticate once and reuse the saved state. You log in a single time and feed that state to the whole suite, the reuse Playwright's auth guide recommends. Add the .auth folder to .gitignore, because the file holds live cookies an attacker can use to impersonate the account.
 
-Watch the scope. A worker isolates itself from other workers. It does nothing for two tests inside the same worker, which run in order against the same user. A test that spends the balance leaves the next one broke. Reach for test scope when a flow mutates state another test reads, and add teardown that deletes the users, or your test database fills with dead registrations.
+Give each parallel worker its own account when tests write shared server state. Build a factory fixture, createUser({ balance: 5000 }), that registers a fresh user per worker through the API. One composable call beats a drawer of fixtures named testUser, testUserWithMoney, testUserWithMoneyAndKyc. Read-only suites can share a single account.
 
-One test for the login form, the login API for everyone else, a fresh user per worker. A failing suite now points at the thing that broke instead of every test going red at once.
+Watch the scope. A worker stays isolated from other workers, not from the tests inside it. Tests in one worker run in order against the same user, so one that spends the balance starves the next. Use test scope for stateful flows and tear down the users you create.
 
-#Playwright #APITesting #TestAutomation #CICD #SoftwareTesting
+One UI login test, API auth for the rest, one account per worker that writes state. A red suite now names the thing that broke.
+
+#Playwright #TestAutomation #APITesting #CICD #QA
