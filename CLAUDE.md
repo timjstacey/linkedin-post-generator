@@ -20,6 +20,7 @@ npm run typecheck     # tsc --noEmit
 npm run format        # Prettier on everything
 npm run research      # run research locally (reads .env, calls claude --print)
 npm run publish       # publish a post (requires POST_FILE_PATH + LinkedIn env vars)
+npm run comment       # comment a blog link on a post (requires LINKEDIN_POST_URL + COMMENT_TEXT + LinkedIn env vars)
 npm run auth:linkedin # OAuth flow → writes LINKEDIN_ACCESS_TOKEN + LINKEDIN_PERSON_URN to .env
 npm run refresh:linkedin # refresh an expired LinkedIn token
 ```
@@ -38,12 +39,13 @@ subscription quota rather than metered API billing.
 
 ### Triggers
 
-| Trigger                           | Kind                                   | What it does                                                                      |
-| --------------------------------- | -------------------------------------- | --------------------------------------------------------------------------------- |
-| Research routine                  | Claude routine, schedule (Mon/Wed/Fri) | Runs the research skill → writes files → opens a `claude/…` PR via `gh`           |
-| Blog routine                      | Claude routine, API trigger            | Fired by the publish Action → cross-posts a long-form blog to the site repo       |
-| `.github/workflows/publish.yml`   | Push to `main` when `posts/**` changes | Detects the new post → `npm run publish` → fires blog routine (with the post URL) |
-| `.github/workflows/pr-checks.yml` | PR to `main`                           | `npm run lint` + `npm run typecheck`                                              |
+| Trigger                                 | Kind                                                        | What it does                                                                                             |
+| --------------------------------------- | ----------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| Research routine                        | Claude routine, schedule (Mon/Wed/Fri)                      | Runs the research skill → writes files → opens a `claude/…` PR via `gh`                                  |
+| Blog routine                            | Claude routine, API trigger                                 | Fired by the publish Action → cross-posts a long-form blog to the site repo                              |
+| `.github/workflows/publish.yml`         | Push to `main` when `posts/**` changes                      | Detects the new post → `npm run publish` → fires blog routine (with the post URL)                        |
+| `.github/workflows/comment-on-blog.yml` | `repository_dispatch` (`blog-published`) from the site repo | Polls the blog URL until live → `npm run comment` → comments the blog link on the original LinkedIn post |
+| `.github/workflows/pr-checks.yml`       | PR to `main`                                                | `npm run lint` + `npm run typecheck`                                                                     |
 
 Routines are created and managed at [claude.ai/code/routines](https://claude.ai/code/routines)
 (or via `/schedule`); their config lives in the Claude account, not in the repo. The repo's
@@ -84,13 +86,28 @@ all files. `posts/INDEX.md` columns: Date, Title, Topic angle, Archetype, Hashta
 then fires the blog routine's API endpoint, passing the slug + URL in the payload (the URL is
 the blog post's backlink). `main` is PR-protected, so the workflow never pushes to it.
 
+### Comment-on-blog workflow detail
+
+Closes the loop after a blog cross-post goes live. The site repo (`resume-static-site`) writes
+`linkedinUrl` + `linkedinComment` into each routine-generated blog post's frontmatter (the blog
+skill does this). When that blog PR merges, a workflow in the site repo reads those fields and
+sends a `repository_dispatch` (`event_type: blog-published`) here with `linkedin_url`,
+`blog_url`, `comment_text`, and `slug`. `comment-on-blog.yml` polls `blog_url` until it returns
+200 (Cloudflare Pages deploy lag), then runs `npm run comment`. `src/comment-workflow.ts`
+derives the post URN from `LINKEDIN_POST_URL`, skips if an identical comment already exists
+(dedup on the blog URL), and calls `createComment()` → `POST /v2/socialActions/{urn}/comments`.
+The same `LINKEDIN_ACCESS_TOKEN` + `LINKEDIN_PERSON_URN` secrets the publish workflow uses cover
+this (scope `w_member_social`); no new secret here. The site repo holds the cross-repo PAT.
+
 ### Source modules (`src/`)
 
-| File                  | Purpose                                                                      |
-| --------------------- | ---------------------------------------------------------------------------- |
-| `config.ts`           | `loadPublishConfig()` — loads + validates LinkedIn env vars                  |
-| `linkedin.ts`         | `createPost()` — POST to LinkedIn UGC Posts API via `fetch`, returns the URN |
-| `publish-workflow.ts` | Publish entry point: reads `POST_FILE_PATH` → `createPost()` → emits the URL |
+| File                  | Purpose                                                                                     |
+| --------------------- | ------------------------------------------------------------------------------------------- |
+| `config.ts`           | `loadPublishConfig()` — loads + validates LinkedIn env vars                                 |
+| `linkedin.ts`         | `createPost()` — POST to LinkedIn UGC Posts API via `fetch`, returns the URN                |
+| `publish-workflow.ts` | Publish entry point: reads `POST_FILE_PATH` → `createPost()` → emits the URL                |
+| `comment.ts`          | `createComment()` / `getExistingComments()` — LinkedIn socialActions comments API           |
+| `comment-workflow.ts` | Comment entry point: reads `LINKEDIN_POST_URL` + `COMMENT_TEXT` → dedup → `createComment()` |
 
 Only runtime dependency is `dotenv`. No SDK, no Octokit — native `fetch` only.
 
