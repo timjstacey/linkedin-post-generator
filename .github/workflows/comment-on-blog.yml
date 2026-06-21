@@ -1,0 +1,75 @@
+name: Comment Blog Link on LinkedIn Post
+
+on:
+  repository_dispatch:
+    types: [blog-published]
+  workflow_dispatch:
+    inputs:
+      linkedin_url:
+        description: 'LinkedIn post feed URL to comment on'
+        required: true
+      blog_url:
+        description: 'Live blog URL (polled for readiness, used for dedup)'
+        required: true
+      comment_text:
+        description: 'Comment text to post verbatim'
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  comment:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Resolve inputs
+        id: inputs
+        env:
+          LINKEDIN_URL: ${{ github.event.client_payload.linkedin_url || inputs.linkedin_url }}
+          BLOG_URL: ${{ github.event.client_payload.blog_url || inputs.blog_url }}
+          COMMENT_TEXT: ${{ github.event.client_payload.comment_text || inputs.comment_text }}
+        run: |
+          {
+            echo "linkedin_url=$LINKEDIN_URL"
+            echo "blog_url=$BLOG_URL"
+          } >> "$GITHUB_OUTPUT"
+          # comment_text may be multi-line; pass it via a heredoc-delimited output.
+          {
+            echo "comment_text<<COMMENT_EOF"
+            echo "$COMMENT_TEXT"
+            echo "COMMENT_EOF"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Wait for the blog URL to be live
+        env:
+          BLOG_URL: ${{ steps.inputs.outputs.blog_url }}
+        run: |
+          for i in $(seq 1 10); do
+            code=$(curl -s -o /dev/null -w '%{http_code}' "$BLOG_URL" || true)
+            if [ "$code" = "200" ]; then
+              echo "Blog URL is live ($code)."
+              exit 0
+            fi
+            echo "Attempt $i: $BLOG_URL returned $code. Waiting 30s..."
+            sleep 30
+          done
+          echo "Blog URL never returned 200 after ~5 minutes." >&2
+          exit 1
+
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - run: npm ci
+
+      - name: Comment on LinkedIn post
+        env:
+          LINKEDIN_ACCESS_TOKEN: ${{ secrets.LINKEDIN_ACCESS_TOKEN }}
+          LINKEDIN_PERSON_URN: ${{ secrets.LINKEDIN_PERSON_URN }}
+          LINKEDIN_POST_URL: ${{ steps.inputs.outputs.linkedin_url }}
+          BLOG_URL: ${{ steps.inputs.outputs.blog_url }}
+          COMMENT_TEXT: ${{ steps.inputs.outputs.comment_text }}
+        run: npm run comment

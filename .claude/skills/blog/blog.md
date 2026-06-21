@@ -81,6 +81,9 @@ Do not hardcode the schema — read it live from the site repo:
 - The "Blog data" section of `$DIR/CLAUDE.md`.
 - One or two existing posts under `$DIR/src/content/posts/*.md` — match their
   frontmatter shape, `preview` block style, and prose voice.
+- `$DIR/astro.config.mjs` — read the `site` value (the base URL, e.g.
+  `https://tim.sillysamoyed.com`). You need it to build the live blog URL for the
+  auto-comment field below: `BLOG_URL = <site>/blog/SITE_SLUG`.
 
 Required frontmatter fields (confirm against `content.config.ts`):
 
@@ -93,6 +96,15 @@ Required frontmatter fields (confirm against `content.config.ts`):
 | `readMins` | integer                                         | `ceil(word_count / 220)`.                           |
 | `preview`  | list of `[prefix, text]` tuples                 | 8–12 lines; the terminal-style cover.               |
 | `hashtags` | list of strings                                 | The LinkedIn footer tags, `#` stripped (see below). |
+
+Two more **optional** fields drive the auto-comment back to LinkedIn (see step 5). Write
+them only when `LINKEDIN_URL` is set (the routine run); omit both on a manual `/blog`
+run that has no source LinkedIn post:
+
+| Field             | Type   | Notes                                                                     |
+| ----------------- | ------ | ------------------------------------------------------------------------- |
+| `linkedinUrl`     | string | The source LinkedIn post URL = `LINKEDIN_URL` from step 2, verbatim.      |
+| `linkedinComment` | string | The comment text CI posts on that LinkedIn post once this blog goes live. |
 
 **`hashtags`** — copy the tags from the last line of `posts/STEM.md` verbatim,
 dropping the leading `#` and any surrounding whitespace. `#Playwright #SoftwareTesting`
@@ -133,8 +145,18 @@ preview:
   - [' ', 'test in a trench coat. Slow, flaky,']
   - [' ', 'expensive. Most assertions belong in']
   - [' ', 'the API layer, not the browser.']
+# Only on a routine run (LINKEDIN_URL set) — omit both on a manual /blog run:
+linkedinUrl: https://www.linkedin.com/feed/update/urn:li:ugcPost:1234567890
+linkedinComment: >
+  I expanded this into a full write-up, with code and the sources it draws on:
+  https://tim.sillysamoyed.com/blog/pushing-validation-out-of-the-ui
 ---
 ```
+
+**`linkedinComment`** — when `LINKEDIN_URL` is set, write a 1–2 sentence comment that points
+readers to this blog post. It must end with the live `BLOG_URL` (`<site>/blog/SITE_SLUG`, the
+`site` you read in step 4). CI posts this text verbatim as a comment on the original LinkedIn
+post once the blog is live, so apply every stop-slop rule and do not write a placeholder URL.
 
 **Body** — long-form, the expanded version of the LinkedIn angle. Requirements:
 
