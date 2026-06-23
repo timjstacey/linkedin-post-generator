@@ -1,6 +1,6 @@
 # Research: Your API Requests Belong in Git, Not Postman's Cloud
 
-**Date range:** 2026-01 to 2026-06-20
+**Date range:** 2026-01 to 2026-06-24
 
 ## Summary
 
