@@ -27,9 +27,16 @@ async function main() {
   // Dedup key: the blog URL if supplied, else the full comment text.
   const dedupKey = process.env['BLOG_URL'] || commentText;
 
-  // If we already commented this blog link on the post, do nothing. Guards against
-  // a re-run of the workflow or a repeated dispatch double-posting.
-  const existing = await getExistingComments(postUrn, config.linkedinAccessToken);
+  // Best-effort dedup: skip if we already commented this blog link, to guard against
+  // a re-run or repeated dispatch. Reading comments needs r_member_social, which the
+  // publish token (w_member_social) lacks — that GET returns 403. Treat any read
+  // failure as "could not check" and fall through to post, rather than aborting.
+  let existing: Awaited<ReturnType<typeof getExistingComments>> = [];
+  try {
+    existing = await getExistingComments(postUrn, config.linkedinAccessToken);
+  } catch (err) {
+    console.warn(`Could not read existing comments (dedup skipped): ${String(err)}`);
+  }
   const alreadyPosted = existing.some(
     (c) => c.actor === config.linkedinPersonUrn && (c.message?.text ?? '').includes(dedupKey)
   );

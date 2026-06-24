@@ -97,10 +97,15 @@ skill does this). When that blog PR merges, a workflow in the site repo reads th
 sends a `repository_dispatch` (`event_type: blog-published`) here with `linkedin_url`,
 `blog_url`, `comment_text`, and `slug`. `comment-on-blog.yml` polls `blog_url` until it returns
 200 (Cloudflare Pages deploy lag), then runs `npm run comment`. `src/comment-workflow.ts`
-derives the post URN from `LINKEDIN_POST_URL`, skips if an identical comment already exists
-(dedup on the blog URL), and calls `createComment()` → `POST /v2/socialActions/{urn}/comments`.
-The same `LINKEDIN_ACCESS_TOKEN` + `LINKEDIN_PERSON_URN` secrets the publish workflow uses cover
-this (scope `w_member_social`); no new secret here. The site repo holds the cross-repo PAT.
+derives the post URN from `LINKEDIN_POST_URL` and calls `createComment()` →
+`POST /v2/socialActions/{urn}/comments`. The same `LINKEDIN_ACCESS_TOKEN` +
+`LINKEDIN_PERSON_URN` secrets the publish workflow uses cover this (scope `w_member_social`);
+no new secret here. The site repo holds the cross-repo PAT.
+
+Dedup is **best-effort**: it reads existing comments to skip a duplicate on a re-run, but the
+GET needs `r_member_social` (the token only has the write scope `w_member_social`), so that
+read returns 403. The code treats a failed read as "could not check" and posts anyway — so a
+manual re-run of `comment-on-blog.yml` for the same post can double-comment.
 
 ### Source modules (`src/`)
 
