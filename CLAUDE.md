@@ -79,8 +79,11 @@ all files. `posts/INDEX.md` columns: Date, Title, Topic angle, Archetype, Hashta
 
 ### Publish workflow detail
 
-`git log --diff-filter=A` detects which `posts/*.md` file was added in the merge commit → sets
-`POST_FILE_PATH` → `npm run publish`. `src/publish-workflow.ts` reads the file, calls
+A net `git diff --diff-filter=A` between the previous `main` tip and the merge commit detects
+which `posts/*.md` file was added → sets `POST_FILE_PATH` → `npm run publish`. (A per-commit
+`git log` would misread an in-branch rename as an add of the old path; the tree diff reports
+only the file that exists now.) A `workflow_dispatch` with a `post_file` input publishes a
+specific file by hand. `src/publish-workflow.ts` reads the file, calls
 `createPost()`, then builds the public post URL from the returned `X-RestLi-Id` URN
 (`https://www.linkedin.com/feed/update/<urn>`) and emits it as a workflow output. The workflow
 then fires the blog routine's API endpoint, passing the slug + URL in the payload (the URL is
