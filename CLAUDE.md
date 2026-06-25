@@ -39,13 +39,14 @@ subscription quota rather than metered API billing.
 
 ### Triggers
 
-| Trigger                                 | Kind                                                        | What it does                                                                                             |
-| --------------------------------------- | ----------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
-| Research routine                        | Claude routine, schedule (Mon/Wed/Fri)                      | Runs the research skill → writes files → opens a `claude/…` PR via `gh`                                  |
-| Blog routine                            | Claude routine, API trigger                                 | Fired by the publish Action → cross-posts a long-form blog to the site repo                              |
-| `.github/workflows/publish.yml`         | Push to `main` when `posts/**` changes                      | Detects the new post → `npm run publish` → fires blog routine (with the post URL)                        |
-| `.github/workflows/comment-on-blog.yml` | `repository_dispatch` (`blog-published`) from the site repo | Polls the blog URL until live → `npm run comment` → comments the blog link on the original LinkedIn post |
-| `.github/workflows/pr-checks.yml`       | PR to `main`                                                | `npm run lint` + `npm run typecheck`                                                                     |
+| Trigger                                  | Kind                                                                   | What it does                                                                                                                                                 |
+| ---------------------------------------- | ---------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Research routine                         | Claude routine, schedule (Mon/Wed/Fri)                                 | Runs the research skill → writes files → opens a `claude/…` PR via `gh`                                                                                      |
+| Blog routine                             | Claude routine, API trigger                                            | Fired by the publish Action → cross-posts a long-form blog to the site repo                                                                                  |
+| `.github/workflows/post-to-linkedin.yml` | `repository_dispatch` (`linkedin-publish`) from the site repo + manual | Posts the dispatched `linkedin_text` verbatim via `npm run publish` (blog-first; the blog link is already in the copy). The thin-poster path.                |
+| `.github/workflows/publish.yml`          | Push to `main` when `posts/**` changes                                 | **Legacy (LinkedIn-first).** Detects the new post → `npm run publish` → fires blog routine (with the post URL). Removed in #29 once blog-first is confirmed. |
+| `.github/workflows/comment-on-blog.yml`  | `repository_dispatch` (`blog-published`) from the site repo            | **Legacy.** Polls the blog URL until live → `npm run comment` → comments the blog link on the original LinkedIn post. Removed in #29.                        |
+| `.github/workflows/pr-checks.yml`        | PR to `main`                                                           | `npm run lint` + `npm run typecheck`                                                                                                                         |
 
 Routines are created and managed at [claude.ai/code/routines](https://claude.ai/code/routines)
 (or via `/schedule`); their config lives in the Claude account, not in the repo. The repo's
@@ -77,17 +78,28 @@ routine and `npm run research` (via `scripts/research-local`) use it. The skill:
 individual post/research files — at 50 posts, indices are ~2,500 tokens vs ~25,000 tokens for
 all files. `posts/INDEX.md` columns: Date, Title, Topic angle, Archetype, Hashtags.
 
-### Publish workflow detail
+### Post-to-LinkedIn workflow detail (blog-first, current)
 
-A net `git diff --diff-filter=A` between the previous `main` tip and the merge commit detects
-which `posts/*.md` file was added → sets `POST_FILE_PATH` → `npm run publish`. (A per-commit
+`post-to-linkedin.yml` is the thin-poster path. `resume-static-site` authors the blog **and**
+the LinkedIn copy, then on merge dispatches the finished text here (`repository_dispatch`,
+`event_type: linkedin-publish`, `client_payload: { linkedin_text, blog_url, slug }`). The
+workflow reads `linkedin_text` + `blog_url` via `env:` (script-injection-safe — never
+interpolated into the run script) and runs `npm run publish`. With `POST_TEXT` set,
+`src/publish-workflow.ts` calls `createPost()` on the text and logs the resulting URL. The blog
+link is already in the copy, so the link runs **one way** (LinkedIn → blog): nothing is
+forwarded or written back. `slug` is unused here. A `workflow_dispatch` with `linkedin_text` /
+`blog_url` inputs posts by hand.
+
+### Publish workflow detail (legacy LinkedIn-first — removed in #29)
+
+`publish.yml` is the old path, kept alive only until blog-first is confirmed. A net
+`git diff --diff-filter=A` between the previous `main` tip and the merge commit detects which
+`posts/*.md` file was added → sets `POST_FILE_PATH` → `npm run publish`. (A per-commit
 `git log` would misread an in-branch rename as an add of the old path; the tree diff reports
-only the file that exists now.) A `workflow_dispatch` with a `post_file` input publishes a
-specific file by hand. `src/publish-workflow.ts` reads the file, calls
-`createPost()`, then builds the public post URL from the returned `X-RestLi-Id` URN
-(`https://www.linkedin.com/feed/update/<urn>`) and emits it as a workflow output. The workflow
-then fires the blog routine's API endpoint, passing the slug + URL in the payload (the URL is
-the blog post's backlink). `main` is PR-protected, so the workflow never pushes to it.
+only the file that exists now.) With `POST_TEXT` unset, `src/publish-workflow.ts` falls back to
+reading that file, calls `createPost()`, builds the post URL from the returned `X-RestLi-Id`
+URN, and emits `slug` + `post_url` as workflow outputs; the workflow then fires the blog
+routine's API endpoint with them. `main` is PR-protected, so the workflow never pushes to it.
 
 ### Comment-on-blog workflow detail
 

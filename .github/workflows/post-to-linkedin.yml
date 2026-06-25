@@ -1,0 +1,44 @@
+name: Post to LinkedIn
+
+# Blog-first publish path. resume-static-site authors the blog and the LinkedIn
+# copy, then dispatches the finished text here on merge. This workflow just posts
+# it — the blog link is already in the copy, so the link runs one way (LinkedIn →
+# blog) with no write-back.
+
+on:
+  repository_dispatch:
+    types: [linkedin-publish]
+  workflow_dispatch:
+    inputs:
+      linkedin_text:
+        description: 'The LinkedIn post text to publish (verbatim)'
+        required: true
+      blog_url:
+        description: 'Canonical blog URL (already embedded in the copy; logged only)'
+        required: false
+
+permissions:
+  contents: read
+
+jobs:
+  post:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - run: npm ci
+
+      - name: Post to LinkedIn
+        # client_payload / inputs are read via env (never interpolated into the run
+        # script) to stay script-injection-safe.
+        env:
+          LINKEDIN_ACCESS_TOKEN: ${{ secrets.LINKEDIN_ACCESS_TOKEN }}
+          LINKEDIN_PERSON_URN: ${{ secrets.LINKEDIN_PERSON_URN }}
+          POST_TEXT: ${{ github.event.client_payload.linkedin_text || inputs.linkedin_text }}
+          BLOG_URL: ${{ github.event.client_payload.blog_url || inputs.blog_url }}
+        run: npm run publish
