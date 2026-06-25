@@ -147,7 +147,7 @@ POST_FILE_PATH=posts/2026-05-24-some-slug.md npm run publish   # publish one pos
 src/
   config.ts             load + validate LinkedIn env vars
   linkedin.ts           LinkedIn UGC Posts API client (returns the post URN)
-  publish-workflow.ts   read merged post → LinkedIn → emit the post URL
+  publish-workflow.ts   POST_TEXT → LinkedIn (blog-first); legacy fallback reads merged post file
 scripts/
   linkedin-auth.ts      OAuth flow to get tokens
   linkedin-refresh.ts   refresh an expired access token
@@ -158,7 +158,9 @@ scripts/
   reply/                draft a reply to a LinkedIn comment
   stop-slop/            writing-quality rules
 .github/workflows/
-  publish.yml           on merge to main: post to LinkedIn, record URL, fire blog routine
+  post-to-linkedin.yml  dispatched linkedin_text from the site repo → post to LinkedIn (blog-first)
+  publish.yml           legacy LinkedIn-first path (removed in #29)
+  comment-on-blog.yml   legacy comment-back loop (removed in #29)
   pr-checks.yml         lint + typecheck on PRs
 .mcp.json               Tavily remote HTTP MCP server
 posts/                  generated posts (committed) + INDEX.md
