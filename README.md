@@ -18,11 +18,13 @@ resume-static-site: blog post merges to main
  post-to-linkedin.yml (this repo)
        │
        └─ npm run publish → createPost() → LinkedIn
-              (the blog link is already in the copy; the link runs one way)
+              └─ createComment() → blog link as the first comment
+                 (LinkedIn demotes posts with external links in the body)
 ```
 
-The blog post links to LinkedIn? No — the **LinkedIn post links to the blog**. One-way, no
-write-back, no comment loop.
+The blog post links to LinkedIn? No — the **LinkedIn post links to the blog**, via a comment on
+the post. One-way, no write-back. If the copy already contains the blog URL, the comment is
+skipped.
 
 ---
 
