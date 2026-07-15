@@ -39,9 +39,29 @@ async function main() {
     return;
   }
 
+  // The comment must not fail the job: the post is already live, and re-running
+  // the workflow would publish it again. Retry briefly (socialActions can 404
+  // right after post creation), then warn and leave the URL for a manual comment.
   console.log('Commenting the blog link on the post...');
-  const commentUrn = await createComment(postUrn, commentText, config.linkedinAccessToken, config.linkedinPersonUrn);
-  console.log(`Comment created. URN: ${commentUrn}`);
+  const attempts = 3;
+  for (let attempt = 1; attempt <= attempts; attempt++) {
+    try {
+      const commentUrn = await createComment(
+        postUrn,
+        commentText,
+        config.linkedinAccessToken,
+        config.linkedinPersonUrn
+      );
+      console.log(`Comment created. URN: ${commentUrn}`);
+      return;
+    } catch (err) {
+      console.error(`Comment attempt ${attempt}/${attempts} failed: ${err}`);
+      if (attempt < attempts) await new Promise((resolve) => setTimeout(resolve, 5000));
+    }
+  }
+  console.log(
+    `::warning::Post published but the blog-link comment failed. Comment manually on ${linkedInPostUrl(postUrn)}`
+  );
 }
 
 main().catch((err) => {
