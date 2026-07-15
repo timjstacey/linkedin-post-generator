@@ -1,9 +1,11 @@
 name: Post to LinkedIn
 
 # Blog-first publish path. resume-static-site authors the blog and the LinkedIn
-# copy, then dispatches the finished text here on merge. This workflow just posts
-# it — the blog link is already in the copy, so the link runs one way (LinkedIn →
-# blog) with no write-back.
+# copy, then dispatches the finished text here on merge. This workflow posts the
+# copy verbatim, then comments the blog link on the new post — LinkedIn demotes
+# posts with external links in the body, so the link rides in a comment. The link
+# still runs one way (LinkedIn → blog) with no write-back. If the copy already
+# contains the blog URL, the comment is skipped.
 
 on:
   repository_dispatch:
@@ -14,7 +16,10 @@ on:
         description: 'The LinkedIn post text to publish (verbatim)'
         required: true
       blog_url:
-        description: 'Canonical blog URL (already embedded in the copy; logged only)'
+        description: 'Canonical blog URL — commented on the post unless already in the copy'
+        required: false
+      comment_text:
+        description: 'Comment text override (defaults to "Full write-up: <blog_url>")'
         required: false
 
 permissions:
@@ -41,4 +46,5 @@ jobs:
           LINKEDIN_PERSON_URN: ${{ secrets.LINKEDIN_PERSON_URN }}
           POST_TEXT: ${{ github.event.client_payload.linkedin_text || inputs.linkedin_text }}
           BLOG_URL: ${{ github.event.client_payload.blog_url || inputs.blog_url }}
+          COMMENT_TEXT: ${{ github.event.client_payload.comment_text || inputs.comment_text }}
         run: npm run publish

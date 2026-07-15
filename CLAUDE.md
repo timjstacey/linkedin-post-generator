@@ -11,8 +11,10 @@ LinkedIn-domain tooling:
 
 1. `resume-static-site` merges a blog post → its `publish-linkedin.yml` `repository_dispatch`es a
    `linkedin-publish` event here with the finished LinkedIn copy.
-2. `post-to-linkedin.yml` posts that copy verbatim via the LinkedIn API. The blog link is already
-   in the copy, so the link runs **one way** (LinkedIn → blog) — nothing is written back.
+2. `post-to-linkedin.yml` posts that copy verbatim via the LinkedIn API, then comments the blog
+   link on the new post (LinkedIn demotes posts with external links in the body, so the link rides
+   in a comment). The link runs **one way** (LinkedIn → blog) — nothing is written back. If the
+   copy already contains the blog URL, the comment is skipped.
 3. The `reply` skill drafts replies to LinkedIn comments (manual), and the OAuth scripts manage the
    ~60-day token lifecycle.
 
@@ -41,19 +43,23 @@ The only runtime dependency is `dotenv`; native `fetch` only, no SDK / Octokit.
 
 ### Triggers
 
-| Trigger                                  | Kind                                                                   | What it does                                                                                                                 |
-| ---------------------------------------- | ---------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
-| `.github/workflows/post-to-linkedin.yml` | `repository_dispatch` (`linkedin-publish`) from the site repo + manual | Posts the dispatched `linkedin_text` verbatim via `npm run publish` (the blog link is already in the copy). The poster path. |
-| `.github/workflows/pr-checks.yml`        | PR to `main`                                                           | `npm run lint` + `npm run typecheck`                                                                                         |
+| Trigger                                  | Kind                                                                   | What it does                                                                                                                       |
+| ---------------------------------------- | ---------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| `.github/workflows/post-to-linkedin.yml` | `repository_dispatch` (`linkedin-publish`) from the site repo + manual | Posts the dispatched `linkedin_text` verbatim via `npm run publish`, then comments the blog link on the new post. The poster path. |
+| `.github/workflows/pr-checks.yml`        | PR to `main`                                                           | `npm run lint` + `npm run typecheck`                                                                                               |
 
 ### Post-to-LinkedIn workflow detail
 
 `resume-static-site` authors the blog **and** the LinkedIn copy, then on merge dispatches the
 finished text here (`repository_dispatch`, `event_type: linkedin-publish`, `client_payload:
-{ linkedin_text, blog_url, slug }`). `post-to-linkedin.yml` reads `linkedin_text` + `blog_url` via
-`env:` (script-injection-safe — never interpolated into the run script) and runs `npm run publish`.
-`src/publish-workflow.ts` reads `POST_TEXT`, calls `createPost()`, and logs the resulting URL.
-`slug` is unused here. A `workflow_dispatch` with `linkedin_text` / `blog_url` inputs posts by hand.
+{ linkedin_text, blog_url, slug, comment_text? }`). `post-to-linkedin.yml` reads `linkedin_text` +
+`blog_url` + `comment_text` via `env:` (script-injection-safe — never interpolated into the run
+script) and runs `npm run publish`. `src/publish-workflow.ts` reads `POST_TEXT`, calls
+`createPost()`, logs the resulting URL, then calls `createComment()` on the new URN with
+`COMMENT_TEXT` (default: `Full write-up: <blog_url>`). The comment is skipped when the blog URL is
+already in the copy (no double link) or when neither `comment_text` nor `blog_url` is supplied.
+`slug` is unused here. A `workflow_dispatch` with `linkedin_text` / `blog_url` / `comment_text`
+inputs posts by hand.
 
 The cross-repo dispatch PAT lives in `resume-static-site` (scoped to write this repo); it fires the
 `linkedin-publish` event. This repo only needs the `LINKEDIN_*` secrets to post.
@@ -64,7 +70,8 @@ The cross-repo dispatch PAT lives in `resume-static-site` (scoped to write this 
 | --------------------- | ---------------------------------------------------------------------------- |
 | `config.ts`           | `loadPublishConfig()` — loads + validates LinkedIn env vars                  |
 | `linkedin.ts`         | `createPost()` — POST to LinkedIn UGC Posts API via `fetch`, returns the URN |
-| `publish-workflow.ts` | Publish entry point: reads `POST_TEXT` → `createPost()` → logs the URL       |
+| `comment.ts`          | `createComment()` — POST to the LinkedIn socialActions API, returns the URN  |
+| `publish-workflow.ts` | Publish entry point: `POST_TEXT` → `createPost()` → comment the blog link    |
 
 ### Writing quality rules
 
