@@ -32,9 +32,12 @@ export async function uploadImage(imageUrl: string, accessToken: string, personU
     };
   };
 
-  const assetUrn = registerData.value.asset;
+  const assetUrn = registerData.value?.asset;
   const uploadUrl =
-    registerData.value.uploadMechanism['com.linkedin.digitalmedia.uploading.MediaUploadHttpRequest'].uploadUrl;
+    registerData.value?.uploadMechanism?.['com.linkedin.digitalmedia.uploading.MediaUploadHttpRequest']?.uploadUrl;
+  if (!assetUrn || !uploadUrl) {
+    throw new Error(`LinkedIn registerUpload response missing asset or uploadUrl: ${JSON.stringify(registerData)}`);
+  }
 
   // Step 2: Download the image. Bound the fetch — a hung image host must not
   // stall the whole publish job (the image is optional; a failure falls back
@@ -84,7 +87,6 @@ export async function createPost(
                 status: 'READY',
                 media: imageAssetUrn,
                 description: { text },
-                title: { text: 'Post image' },
               },
             ],
           }
