@@ -52,26 +52,27 @@ The only runtime dependency is `dotenv`; native `fetch` only, no SDK / Octokit.
 
 `resume-static-site` authors the blog **and** the LinkedIn copy, then on merge dispatches the
 finished text here (`repository_dispatch`, `event_type: linkedin-publish`, `client_payload:
-{ linkedin_text, blog_url, slug, comment_text? }`). `post-to-linkedin.yml` reads `linkedin_text` +
+{ linkedin_text, blog_url, slug, comment_text?, image_url? }`). `post-to-linkedin.yml` reads `linkedin_text` +
 `blog_url` + `comment_text` via `env:` (script-injection-safe — never interpolated into the run
 script) and runs `npm run publish`. `src/publish-workflow.ts` reads `POST_TEXT`, calls
 `createPost()`, logs the resulting URL, then calls `createComment()` on the new URN with
 `COMMENT_TEXT` (default: `Full write-up: <blog_url>`). The comment is skipped when the blog URL is
 already in the copy (no double link) or when neither `comment_text` nor `blog_url` is supplied.
 `slug` is unused here. A `workflow_dispatch` with `linkedin_text` / `blog_url` / `comment_text`
-inputs posts by hand.
+inputs posts by hand. `image_url` (optional public PNG URL) is uploaded as native post media via
+`uploadImage()` before `createPost()`; if the upload fails, the post falls back to text-only.
 
 The cross-repo dispatch PAT lives in `resume-static-site` (scoped to write this repo); it fires the
 `linkedin-publish` event. This repo only needs the `LINKEDIN_*` secrets to post.
 
 ### Source modules (`src/`)
 
-| File                  | Purpose                                                                      |
-| --------------------- | ---------------------------------------------------------------------------- |
-| `config.ts`           | `loadPublishConfig()` — loads + validates LinkedIn env vars                  |
-| `linkedin.ts`         | `createPost()` — POST to LinkedIn UGC Posts API via `fetch`, returns the URN |
-| `comment.ts`          | `createComment()` — POST to the LinkedIn socialActions API, returns the URN  |
-| `publish-workflow.ts` | Publish entry point: `POST_TEXT` → `createPost()` → comment the blog link    |
+| File                  | Purpose                                                                                                                     |
+| --------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| `config.ts`           | `loadPublishConfig()` — loads + validates LinkedIn env vars                                                                 |
+| `linkedin.ts`         | `createPost()` + `uploadImage()` — LinkedIn UGC Posts API + image asset upload; `createPost` takes optional image asset URN |
+| `comment.ts`          | `createComment()` — POST to the LinkedIn socialActions API, returns the URN                                                 |
+| `publish-workflow.ts` | Publish entry point: `POST_TEXT` → `createPost()` → comment the blog link                                                   |
 
 ### Writing quality rules
 

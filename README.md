@@ -13,7 +13,7 @@ resume-static-site: blog post merges to main
        │
        ▼
  publish-linkedin.yml → repository_dispatch (linkedin-publish)
-       │   client_payload: { linkedin_text, blog_url, slug }
+       │   client_payload: { linkedin_text, blog_url, slug, comment_text?, image_url? }
        ▼
  post-to-linkedin.yml (this repo)
        │
@@ -25,6 +25,10 @@ resume-static-site: blog post merges to main
 The blog post links to LinkedIn? No — the **LinkedIn post links to the blog**, via a comment on
 the post. One-way, no write-back. If the copy already contains the blog URL, the comment is
 skipped.
+
+`image_url` in `client_payload` is optional. When present, the workflow downloads the PNG and
+uploads it as native LinkedIn post media before creating the post. If the upload fails, it falls
+back to a text-only post — the publish never fails due to an image error.
 
 ---
 

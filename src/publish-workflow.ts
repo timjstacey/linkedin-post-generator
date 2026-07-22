@@ -1,5 +1,5 @@
 import { loadPublishConfig } from './config.js';
-import { createPost } from './linkedin.js';
+import { createPost, uploadImage } from './linkedin.js';
 import { createComment } from './comment.js';
 
 /** Public URL for a created post, from the `urn:li:share:…` / `urn:li:ugcPost:…` URN. */
@@ -21,9 +21,23 @@ async function main() {
 
   const blogUrl = process.env['BLOG_URL']?.trim();
   const commentText = process.env['COMMENT_TEXT']?.trim() || (blogUrl ? `Full write-up: ${blogUrl}` : '');
+  const imageUrl = process.env['IMAGE_URL']?.trim();
 
   console.log('Publishing dispatched text to LinkedIn...');
-  const postUrn = await createPost(postText, config.linkedinAccessToken, config.linkedinPersonUrn);
+  let postUrn: string;
+  if (imageUrl) {
+    let imageAssetUrn: string | undefined;
+    try {
+      console.log(`Uploading image: ${imageUrl}`);
+      imageAssetUrn = await uploadImage(imageUrl, config.linkedinAccessToken, config.linkedinPersonUrn);
+      console.log(`Image uploaded. Asset URN: ${imageAssetUrn}`);
+    } catch (err) {
+      console.error(`Image upload failed, falling back to text-only post: ${err}`);
+    }
+    postUrn = await createPost(postText, config.linkedinAccessToken, config.linkedinPersonUrn, imageAssetUrn);
+  } else {
+    postUrn = await createPost(postText, config.linkedinAccessToken, config.linkedinPersonUrn);
+  }
   console.log(`Published successfully. URN: ${postUrn}`);
   console.log(`Post URL: ${linkedInPostUrl(postUrn)}`);
 

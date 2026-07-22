@@ -21,6 +21,9 @@ on:
       comment_text:
         description: 'Comment text override (defaults to "Full write-up: <blog_url>")'
         required: false
+      image_url:
+        description: 'Public PNG URL to attach as native post media (optional)'
+        required: false
 
 permissions:
   contents: read
@@ -47,4 +50,5 @@ jobs:
           POST_TEXT: ${{ github.event.client_payload.linkedin_text || inputs.linkedin_text }}
           BLOG_URL: ${{ github.event.client_payload.blog_url || inputs.blog_url }}
           COMMENT_TEXT: ${{ github.event.client_payload.comment_text || inputs.comment_text }}
+          IMAGE_URL: ${{ github.event.client_payload.image_url || inputs.image_url }}
         run: npm run publish
