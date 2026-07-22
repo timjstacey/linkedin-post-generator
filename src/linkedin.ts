@@ -65,7 +65,46 @@ export async function uploadImage(imageUrl: string, accessToken: string, personU
     throw new Error(`LinkedIn API error ${uploadResponse.status}: ${errorBody}`);
   }
 
+  // Step 4: Wait for the asset to finish processing. LinkedIn ingests the
+  // upload async — attaching it to a post before the recipe is AVAILABLE races
+  // and can publish without the image. Poll (bounded) until it's ready.
+  await waitForAssetAvailable(assetUrn, accessToken);
+
   return assetUrn;
+}
+
+/** Poll GET /v2/assets/{id} until the feedshare-image recipe is AVAILABLE. */
+async function waitForAssetAvailable(assetUrn: string, accessToken: string): Promise<void> {
+  const assetId = assetUrn.split(':').pop();
+  const attempts = 10;
+  const delayMs = 1500;
+
+  for (let attempt = 1; attempt <= attempts; attempt++) {
+    const response = await fetch(`https://api.linkedin.com/v2/assets/${assetId}`, {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        'X-Restli-Protocol-Version': '2.0.0',
+      },
+    });
+
+    if (!response.ok) {
+      const errorBody = await response.text();
+      throw new Error(`LinkedIn API error ${response.status}: ${errorBody}`);
+    }
+
+    const data = (await response.json()) as {
+      status?: string;
+      recipes?: { status?: string }[];
+    };
+    // Top-level status flips to AVAILABLE once every recipe is ingested;
+    // recipes[].status is the per-recipe view. Treat either signal as ready.
+    const ready = data.status === 'AVAILABLE' || data.recipes?.some((r) => r.status === 'AVAILABLE');
+    if (ready) return;
+
+    if (attempt < attempts) await new Promise((resolve) => setTimeout(resolve, delayMs));
+  }
+
+  throw new Error(`LinkedIn asset ${assetUrn} not AVAILABLE after ${attempts} polls`);
 }
 
 export async function createPost(
